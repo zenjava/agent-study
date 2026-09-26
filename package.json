@@ -1,0 +1,22 @@
+{
+  "name": "order-copilot-harness",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "start": "node --env-file=.env server.mjs",
+    "demo": "node server.mjs",
+    "test": "node --test test/*.test.mjs"
+  },
+  "dependencies": {
+    "@ag-ui/client": "0.0.59",
+    "@copilotkit/react-core": "1.74.0",
+    "@copilotkit/runtime": "1.74.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "rxjs": "7.8.1",
+    "vite": "7.3.6",
+    "zod": "3.25.76"
+  }
+}
