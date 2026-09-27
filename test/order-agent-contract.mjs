@@ -1,13 +1,10 @@
 /**
  * 三版 Agent 共享的行为契约：通过本地 HTTP 脚本回复，验证请求、工具回传和执行边界。
- * 传入不同 runner 与 CLI 入口即可复用同一组断言，避免三版验证标准漂移。
+ * 传入不同 runner 即可复用同一组断言，避免三版验证标准漂移。
  */
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import { once } from 'node:events';
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
-import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
 import { getOrder } from '../src/agent/common/tools/get-order.mjs';
 
@@ -94,12 +91,11 @@ async function serve(t, replies) {
 }
 
 /**
- * 为指定 Agent 实现及 CLI 注册共用行为测试，验证 HTTP 工具循环和执行边界。
+ * 为指定 Agent 实现注册共用行为测试，验证 HTTP 工具循环和执行边界。
  * @param {Function} runOrderQuestion 待测的异步问答函数。
- * @param {string} entryFile 相对于本契约模块的 CLI 入口路径。
  * @returns {void}
  */
-export function orderAgentContract(runOrderQuestion, entryFile) {
+export function orderAgentContract(runOrderQuestion) {
   for (const orderId of ['A1001', 'A9999']) {
     test(`HTTP 完整循环：${orderId} 的真实查询结果按调用 ID 回传`, /** 验证：HTTP 完整循环：${orderId} 的真实查询结果按调用 ID 回传。 */ async (t) => {
       const call = toolCall(JSON.stringify({ orderId }));
@@ -284,7 +280,7 @@ export function orderAgentContract(runOrderQuestion, entryFile) {
     await assert.rejects(runOrderQuestion({ question: options.question }), /** 确认缺少配置时提示必需环境变量和本机初始化步骤。 */ (error) => {
       assert.match(error.message, /LLM_BASE_URL.*LLM_MODEL.*LLM_API_KEY/);
       assert.match(error.message, /cp -n \.env\.example \.env/);
-      assert.ok(error.message.includes(`node --env-file=.env ${entryFile.replace(/^\.\.\//, '')}`));
+      assert.ok(error.message.includes('npm start'));
       return true;
     });
   });
@@ -315,23 +311,6 @@ export function orderAgentContract(runOrderQuestion, entryFile) {
     const toolResult = api.requests[1].body.messages.at(-1);
     assert.equal(toolResult.tool_call_id, 'call_1');
     assert.equal(JSON.parse(toolResult.content).order.currentApprover, '采购负责人');
-  });
-
-  test('命令行入口使用环境变量完成 HTTP 工具循环', /** 验证：命令行入口使用环境变量完成 HTTP 工具循环。 */ async (t) => {
-    const api = await serve(t, [callReply(toolCall()), textReply('A1001 等待采购负责人审批。')]);
-    const { stdout, stderr } = await promisify(execFile)(process.execPath, [
-      fileURLToPath(new URL(entryFile, import.meta.url)), 'A1001 谁在审批？',
-    ], {
-      env: { ...process.env, LLM_BASE_URL: api.baseURL, LLM_MODEL: options.model, LLM_API_KEY: fakeKey },
-      timeout: 5_000,
-    });
-    assert.equal(stderr, '');
-    assert.match(stdout, /第 1 次请求/);
-    assert.match(stdout, /第 2 次请求/);
-    assert.match(stdout, /tool_call_id=call_1/);
-    assert.match(stdout, /A1001 等待采购负责人审批/);
-    assert.ok(!stdout.includes(fakeKey));
-    assert.equal(api.requests[0].body.messages[1].content, 'A1001 谁在审批？');
   });
 
   test('完整展示每次模型原始响应，并对响应内容脱敏', /** 验证：完整展示每次模型原始响应，并对响应内容脱敏。 */ async (t) => {

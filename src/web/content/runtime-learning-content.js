@@ -1,6 +1,6 @@
 /**
  * Copilot Runtime 独立课程：说明三种 Web Agent 共用的连接、分发、事件和界面路径。
- * 源码节选来自构建时白名单；命令行入口直接调用 Agent，不经过 Runtime。
+ * 源码节选来自构建时白名单，解释页面到 Agent 的共用链路。
  */
 import { excerpt } from './source-files.js';
 
@@ -20,7 +20,7 @@ export const runtimeLessons = [
   {
     id: 'runtime-map', name: '先看共同链路', subtitle: 'Runtime 在哪一层', minutes: '4 min',
     title: '三种 Agent 实现，共用一条页面接入链路。',
-    intro: '工作台切换原生 JavaScript、LangChain 或 LangGraph 时，页面仍通过同一个 Copilot Runtime 提交问题和接收结果。命令行入口直接运行 Agent，不经过这条 Web 链路。',
+    intro: '工作台切换原生 JavaScript、LangChain 或 LangGraph 时，页面仍通过同一个 Copilot Runtime 提交问题和接收结果。',
     takeaway: 'Provider → Runtime → OrderAgent → 选中的问答实现 → AG-UI 事件 → 页面。',
     points: [
       ['先分清分工', 'Copilot Runtime 根据 agentId 找到后端 Agent，负责运行接口与事件传输。原生循环、LangChain createAgent 和 LangGraph StateGraph 才决定怎样调用模型与工具；切换编排方式不需要重写 Web 协议。'],
@@ -32,7 +32,7 @@ export const runtimeLessons = [
       { label: 'Runtime 注册五个入口', note: 'Runtime 负责名字到后端 Agent 的分发；runner 决定进入哪种编排实现。', ...excerpt('src/server/copilot-handler.mjs', 'const runtime =', 'return createCopilotRuntimeHandler') },
       { label: '接入层调用实现', note: 'OrderAgent.run 在每次运行中调用注入的 runner，随后把领域事件转为页面可消费的事件。', ...excerpt('src/server/order-agent.mjs', 'const options =', 'await this.runner(options);') },
     ],
-    quiz: { question: '把 Web 工作台从 LangChain 切到 LangGraph，Copilot Runtime 会怎样变化？', options: ['继续通过同一 Runtime，按新的 agentId 选择后端实现', '浏览器绕过 Runtime 直接调用模型 API', 'Runtime 会自动把原生循环改写成图'], answer: 0, explanation: '三种实现共用 Web 接入层；变化的是 Runtime 选中的后端 runner。CLI 则直接调用实现。' },
+    quiz: { question: '把 Web 工作台从 LangChain 切到 LangGraph，Copilot Runtime 会怎样变化？', options: ['继续通过同一 Runtime，按新的 agentId 选择后端实现', '浏览器绕过 Runtime 直接调用模型 API', 'Runtime 会自动把原生循环改写成图'], answer: 0, explanation: '三种实现共用 Web 接入层；变化的是 Runtime 选中的后端 runner。' },
   },
   {
     id: 'runtime-connect', name: '从页面接入服务', subtitle: 'Provider、路由与注册', minutes: '5 min',

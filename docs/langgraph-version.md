@@ -1,6 +1,6 @@
 # 并存的 LangGraph 学习版本
 
-LangChain 实现在 `src/agent/langchain/agent.mjs`，LangGraph 实现在 `src/agent/langgraph/agent.mjs`；`src/agent/langchain/cli.mjs` 和 `src/agent/langgraph/cli.mjs` 分别保留为 CLI 入口。比较对象是 `createAgent` 高层 API 与显式 `StateGraph`；LangChain Agent 本身也基于 LangGraph。
+LangChain 实现在 `src/agent/langchain/agent.mjs`，LangGraph 实现在 `src/agent/langgraph/agent.mjs`。比较对象是 `createAgent` 高层 API 与显式 `StateGraph`；LangChain Agent 本身也基于 LangGraph。
 
 ## 运行链路
 
@@ -13,7 +13,7 @@ LangChain 实现在 `src/agent/langchain/agent.mjs`，LangGraph 实现在 `src/a
 
 ## 学习教程
 
-- `/learn/runtime`：三种 Web 实现共用的 Runtime 接入、协议适配与事件渲染四节；CLI 不走 Runtime。
+- `/learn/runtime`：三种 Web 实现共用的 Runtime 接入、协议适配与事件渲染四节。
 - `/learn`（兼容 `/learn/langchain`）：LangChain 七节。
 - `/learn/langgraph`：六节，包括 State / Reducer、Node、Edge、compile / invoke、交互图及两版对照。
 - 进度分别保存在 `harness-learning-runtime-v1`、`harness-learning-v1` 和 `harness-learning-langgraph-v1`；重置只影响当前路线。

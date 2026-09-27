@@ -36,7 +36,7 @@ export async function runOrderQuestionGraph({
   if (![baseURL, model, apiKey].every(/** 确认模型地址、名称和密钥均为非空字符串。 */ (value) => typeof value === 'string' && value.trim())) {
     throw new Error('请配置 LLM_BASE_URL、LLM_MODEL、LLM_API_KEY。' +
       '在项目目录执行 cp -n .env.example .env，再在本机编辑 .env；' +
-      '使用 node --env-file=.env src/agent/langgraph/cli.mjs 启动。');
+      '使用 npm start 启动 Web 服务。');
   }
   if (['replace-with-your-deepseek-api-key', 'replace-with-your-openai-api-key'].includes(apiKey.trim())) {
     throw new Error('请在本机 .env 中将 LLM_API_KEY 的占位符替换为你的 DeepSeek API key，再重启服务。');

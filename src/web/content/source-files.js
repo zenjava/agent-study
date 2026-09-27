@@ -5,7 +5,6 @@
 import nativeSource from '../../agent/native/agent.mjs?raw';
 import nativeDemoSource from '../../agent/native/demo/model.demo.mjs?raw';
 import definitionSource from '../../agent/common/order-definition.mjs?raw';
-import nativeEntrySource from '../../agent/native/cli.mjs?raw';
 // 只导入明确列出的教学源码；不读取 .env 或提供任意文件访问接口。
 import agentSource from '../../agent/langchain/agent.mjs?raw';
 import graphSource from '../../agent/langgraph/agent.mjs?raw';
@@ -25,14 +24,11 @@ import cardSource from '../components/chat/OrderCard.jsx?raw';
 import serverSource from '../../server/http-server.mjs?raw';
 import traceSource from '../components/chat/TracePanel.jsx?raw';
 import serverEntrySource from '../../server/main.mjs?raw';
-import langchainEntrySource from '../../agent/langchain/cli.mjs?raw';
-import langgraphEntrySource from '../../agent/langgraph/cli.mjs?raw';
 
 export const files = {
   'src/agent/native/agent.mjs': nativeSource,
   'src/agent/native/demo/model.demo.mjs': nativeDemoSource,
   'src/agent/common/order-definition.mjs': definitionSource,
-  'src/agent/native/cli.mjs': nativeEntrySource,
   'src/agent/langchain/agent.mjs': agentSource,
   'src/agent/langgraph/agent.mjs': graphSource,
   'src/agent/common/order-contract.mjs': contractSource,
@@ -51,8 +47,6 @@ export const files = {
   'src/server/http-server.mjs': serverSource,
   'src/web/components/chat/TracePanel.jsx': traceSource,
   'src/server/main.mjs': serverEntrySource,
-  'src/agent/langchain/cli.mjs': langchainEntrySource,
-  'src/agent/langgraph/cli.mjs': langgraphEntrySource,
 };
 
 /**

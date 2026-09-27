@@ -203,8 +203,6 @@ export const fileMap = [
   ['src/agent/native/demo/model.demo.mjs', '原生 Demo', '用本地脚本模拟模型，执行真实原生循环'],
   ['src/agent/common/order-definition.mjs', '业务定义', '无框架的工具说明、JSON Schema 与系统提示词'],
   ['src/server/main.mjs', '启动入口', '读取环境配置，启动 HTTP 服务'],
-  ['src/agent/langchain/cli.mjs', 'CLI 入口', '读取命令行参数，运行 LangChain Agent'],
-  ['src/agent/langgraph/cli.mjs', 'CLI 入口', '读取命令行参数，运行 LangGraph Agent'],
   ['src/web/entries/main.jsx', '浏览器入口', '加载样式并挂载 React 页面'],
   ['src/web/pages/chat/ChatPage.jsx', '聊天页面', '组装 Provider 与会话工作台'],
   ['src/web/state/chat/useChatSession.js', '会话状态', '读取配置、选择模式与版本、重置会话'],

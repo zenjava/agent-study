@@ -8,19 +8,19 @@ export const nativeLessons = [
   {
     id: 'native-map', name: '原生版的边界', subtitle: '模型、程序、界面', minutes: '3 min',
     title: '先看清：谁思考，谁执行。',
-    intro: '原生版不使用 LangChain、LangGraph、模型 SDK 或 Zod。Agent 由普通 JavaScript 函数组成，命令行可以独立运行；网页继续复用 React、CopilotKit 和 AG-UI。',
+    intro: '原生版不使用 LangChain、LangGraph、模型 SDK 或 Zod。Agent 由普通 JavaScript 函数组成；网页继续复用 React、CopilotKit 和 AG-UI。',
     takeaway: '模型返回工具调用意图；你的程序校验、执行工具，并决定是否继续请求。',
     points: [
       ['Web 收集问题', '页面只发送用户消息。真实模式的 orders_native 路由把问题交给原生 Agent；模型 Key 留在 Node 进程中。'],
       ['服务端适配协议', 'OrderAgent 整理历史，将原生 Agent 的 request、tool_result、answer 事件转为 AG-UI；它不替原生版管理模型循环。'],
-      ['Agent 独立于界面', 'native/agent.mjs 只依赖工具函数、普通 JSON 定义和原生 HTTP 观察层。npm run demo:native 无需 Key；npm run agent:native 使用本机配置的真实模型。'],
+      ['Agent 独立于界面', 'native/agent.mjs 只依赖工具函数、普通 JSON 定义和原生 HTTP 观察层。工作台的本地演示无需 Key；真实模型模式使用本机配置。'],
     ],
     snippets: [
       { label: '纯 JavaScript 依赖', ...excerpt('src/agent/native/agent.mjs', 'import { getOrder', "from '../common/model-transport.mjs'") },
       { label: '网页如何选中原生版', ...excerpt('src/server/copilot-handler.mjs', 'const runtime =', 'return createCopilotRuntimeHandler') },
-      { label: '命令行入口', ...excerpt('src/agent/native/cli.mjs', 'if (process.argv[1]', 'process.exitCode = 1;') },
+      { label: 'Web 接入层', ...excerpt('src/server/order-agent.mjs', 'const options =', 'await this.runner(options);') },
     ],
-    quiz: { question: '这里“无框架”指哪一层？', options: ['整个网页都不用 React', 'Agent 核心独立于框架，Web 继续共用现有界面', '模型不再需要 HTTP 接口'], answer: 1, explanation: '无框架是 Agent 的实现边界。可以直接从 CLI 运行它，网页接入仍通过现有服务。' },
+    quiz: { question: '这里“无框架”指哪一层？', options: ['整个网页都不用 React', 'Agent 核心独立于框架，Web 继续共用现有界面', '模型不再需要 HTTP 接口'], answer: 1, explanation: '无框架是 Agent 的实现边界；网页仍通过现有服务接入。' },
   },
   {
     id: 'native-messages', name: '消息与工具说明', subtitle: '模型实际看见什么', minutes: '4 min',

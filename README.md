@@ -23,16 +23,12 @@ harness/
 │   └── agent/
 │       ├── native/             # 原生 JavaScript 实现
 │       │   ├── agent.mjs       # fetch + messages + 手写循环
-│       │   ├── cli.mjs         # 原生 Agent 命令行入口
-│       │   ├── demo/
-│       │   │   └── model.demo.mjs # 脚本模型驱动的原生循环演示
-│       │   └── query.mjs       # 直接调用业务函数的最小示例
+│       │   └── demo/
+│       │       └── model.demo.mjs # 脚本模型驱动的原生循环演示
 │       ├── langchain/
-│       │   ├── agent.mjs       # createAgent 编排
-│       │   └── cli.mjs         # LangChain 命令行入口
+│       │   └── agent.mjs       # createAgent 编排
 │       ├── langgraph/
-│       │   ├── agent.mjs       # StateGraph 编排
-│       │   └── cli.mjs         # LangGraph 命令行入口
+│       │   └── agent.mjs       # StateGraph 编排
 │       └── common/
 │           ├── order-definition.mjs # 无框架的工具说明与系统提示词
 │           ├── order-contract.mjs   # 两种框架实现共用的工具适配
@@ -40,7 +36,6 @@ harness/
 │           ├── tools/get-order.mjs  # 三版共用的订单查询函数
 │           └── demo/
 │               ├── orders.demo.json # 虚构订单样本
-│               ├── inputs.demo.json # CLI 默认输入与示例订单号
 │               └── rules.demo.mjs   # 框架版共用的固定规则演示
 ├── test/                       # 三版行为契约与服务集成测试
 ├── docs/                       # 学习与设计文档
@@ -51,25 +46,20 @@ harness/
 └── .gitignore
 ```
 
-所有源码入口都跟随所属模块，根目录通过 npm scripts 统一启动：
+Web 服务通过根目录的 npm scripts 启动：
 
 | 命令 | 用途 |
 | --- | --- |
-| `npm run query -- A1001` | 普通函数查单，不调用模型 |
-| `npm run demo:native -- "A1001 谁在审批？"` | 原生循环 Demo，不需要 Key 或第三方依赖 |
-| `npm run agent:native -- "A1001 谁在审批？"` | 原生 Agent，读取 `.env` 调用真实模型 |
-| `npm run agent:langchain -- "A1001 谁在审批？"` | LangChain Agent |
-| `npm run agent:langgraph -- "A1001 谁在审批？"` | LangGraph Agent |
 | `npm run build` | 将 Web 构建到根目录 `dist/` |
 | `npm run demo` | 启动 Web 服务，不加载 `.env` |
 | `npm start` | 启动 Web 服务并加载 `.env` |
 | `npm test` | 运行离线行为与本地 HTTP 集成测试 |
 
-网页首次使用先执行 `npm ci --ignore-scripts`、`npm run build`，再执行 `npm run demo`。默认地址为 `http://127.0.0.1:3210`。根目录不再保留 index.mjs、step2.mjs、step3-langgraph.mjs 或 server.mjs 这些旧启动文件，使用上表命令。
+网页首次使用先执行 `npm ci --ignore-scripts`、`npm run build`，再执行 `npm run demo`。默认地址为 `http://127.0.0.1:3210`。
 
 工作台调用链：`src/web/state/chat/useChatRun.js` → HTTP → `src/server/http-server.mjs` → Copilot Runtime → AG-UI 适配 → `src/agent/{native,langchain,langgraph}/agent.mjs` → `src/agent/common/tools/get-order.mjs`。
 
-每种实现的编排与启动入口放在同一个子目录。`common` 集中跨实现复用的业务定义、数据查询和模型通信；其中 `order-contract.mjs` 只供 LangChain / LangGraph 使用。原生版直接导入不依赖框架的公共模块，不经过汇总导出文件，因此独立 CLI 与浏览器离线 Demo 都不会间接加载框架依赖。
+每种实现的编排代码放在自己的子目录。`common` 集中跨实现复用的业务定义、数据查询和模型通信；其中 `order-contract.mjs` 只供 LangChain / LangGraph 使用。原生版直接导入不依赖框架的公共模块，浏览器离线 Demo 不会间接加载框架依赖。
 
 演示数据按归属集中到小写 `demo/` 目录，文件使用小写 `.demo` 标记，再接格式扩展名（如 `orders.demo.json`、`model.demo.mjs`）。跨实现共享数据放在 `src/agent/common/demo/`，原生模拟模型放在 `src/agent/native/demo/`，页面场景与预览数据放在 `src/web/content/demo/`。查询函数、组件和状态只引用这些文件。测试内部夹具仍留在 `test/`。
 
@@ -85,86 +75,27 @@ Web 分层与修改入口见 [Web 目录说明](docs/web-structure.md)。入口�
 
 - **本地演示**走 `demo_native`，实际执行原生循环、参数校验、getOrder 和消息回传，只替换模型响应；无需 Key、不调用外部 API，统计明确标注模拟请求。
 - **真实模型**走 `orders_native`，使用 `.env`，通过原生 fetch 调用兼容 Chat Completions 接口。
-- **CLI Demo**可独立运行 `npm run demo:native`，不依赖 Web 服务和 node_modules。
 
 教程包含六节：实现边界、messages 与工具说明、完整循环、工具执行与回传、执行限制、三版对照。循环演示支持查到订单、订单不存在、缺少订单号和多个订单，展示当前代码实际产生的事件快照。学习进度与其他实现课程及 Runtime 课程分开保存。
 
-# 第一步：用普通函数查订单
+# 第一步：理解普通函数查单
 
-第一步普通函数示例使用原生 Node.js ESM，不需要安装依赖；Agent 提供原生 JavaScript、LangChain.js 与 LangGraph.js 三种实现，网页使用 React + CopilotKit。
+`src/agent/common/tools/get-order.mjs` 的 `getOrder({ orderId })` 在虚构订单样本中查找订单。找到时返回 `{ found: true, order }`，找不到时返回 `{ found: false, orderId }`。它是普通 JavaScript 函数，由 Node.js 执行，不需要模型。工作台中选择示例订单并发送问题，可以看到 Agent 调用它后返回的业务卡片；订单数据来自 `src/agent/common/demo/orders.demo.json`。
 
-```text
-harness/
-├── src/agent/native/query.mjs          # 入口：读取输入 → 调用函数 → 打印结果
-├── src/agent/common/tools/
-│   └── get-order.mjs  # getOrder 查询函数
-├── src/agent/common/demo/
-│   └── orders.demo.json  # 独立的虚构订单数据
-└── README.md
-```
-
-在项目目录运行：
-
-```bash
-node src/agent/native/query.mjs A1001
-```
-
-返回（以下只摘录核心字段，现已包含完整商品、金额与流程信息）：
-
-```json
-{
-  "found": true,
-  "order": {
-    "orderId": "A1001",
-    "status": "等待审批",
-    "currentApprover": "采购负责人"
-  }
-}
-```
-
-查询不存在的订单：
-
-```bash
-node src/agent/native/query.mjs A9999
-```
-
-返回：
-
-```json
-{
-  "found": false,
-  "orderId": "A9999"
-}
-```
-
-直接运行 `node src/agent/native/query.mjs` 时，默认查询 `A1001`。
-
-从 `src/agent/native/query.mjs` 开始看：
-
-1. **输入**：命令行提供订单号，入口组装成 `{ orderId: 'A1001' }`。
-2. **查询**：Node.js 调用 `getOrder({ orderId })`，函数在内存数组中查找订单。
-3. **输出**：找到时返回 `{ found: true, order }`；未找到时返回 `{ found: false, orderId }`。入口将结果打印出来。
-
-此时没有模型参与。`getOrder` 就是普通 JavaScript 函数，由 Node.js 执行。未来接入模型后，模型会提出工具调用请求，Node.js 仍负责执行这个函数，再把结果回传给模型，由模型组织回答。
+接入模型后，模型只提出 `getOrder` 工具调用请求。服务端校验并执行函数，再把结果回传给模型组织回答。
 
 # 第二步：让模型提出工具调用请求
 
-命令行入口是 `src/agent/langchain/cli.mjs`，实现位于 `src/agent/langchain/agent.mjs`，继续使用第一步的 `src/agent/common/tools/get-order.mjs`。现在由 LangChain.js 的 `createAgent` 管理模型与工具循环，`ChatOpenAI` 连接兼容接口。使用 Node.js 22 或更高版本，并先运行 `npm ci --ignore-scripts` 安装锁定依赖。
+模型与工具循环由 `src/agent/langchain/agent.mjs` 中的 LangChain.js `createAgent` 管理，`ChatOpenAI` 连接兼容接口；`src/agent/langgraph/agent.mjs` 则以显式图编排同一业务函数。使用 Node.js 22 或更高版本，并先运行 `npm ci --ignore-scripts` 安装锁定依赖。
 
 ```text
-harness/
-├── src/agent/native/query.mjs          # 第一步：直接查询
-├── src/agent/langchain/cli.mjs          # LangChain CLI：读取参数并调用实现
-├── src/agent/langgraph/cli.mjs # LangGraph CLI：读取参数并调用实现
-├── src/agent/langchain/agent.mjs # 模型配置、中间件和 createAgent / invoke
-├── src/agent/langgraph/agent.mjs # State、模型/工具节点、条件边与 invoke
-├── src/agent/common/order-contract.mjs # 框架工具 Schema 与工具注册
-├── src/agent/common/tools/get-order.mjs  # 两步共用的真实查询函数
-├── src/agent/common/model-transport.mjs # HTTP 原始请求、响应和 usage 观察层
-├── test/langchain.test.mjs # 本地 HTTP 模拟测试
-├── .env.example      # DeepSeek 配置模板，密钥为占位符，可加入 Git
-├── .gitignore        # 忽略 .env 和 .env.*，保留 .env.example
-└── README.md
+src/agent/native/agent.mjs          原生模型与工具循环
+src/agent/langchain/agent.mjs       LangChain createAgent 编排
+src/agent/langgraph/agent.mjs       LangGraph StateGraph 编排
+src/agent/common/order-contract.mjs 框架工具 Schema 与注册
+src/agent/common/tools/get-order.mjs 三版共用的订单查询函数
+src/agent/common/model-transport.mjs HTTP 请求、响应和 usage 观察层
+src/server/copilot-handler.mjs      Web Runtime 注册与分发
 ```
 
 ## 配置并启动
@@ -194,13 +125,7 @@ LLM_API_KEY=replace-with-your-deepseek-api-key
 
 这里沿用项目的 `LLM_*` 变量名，密钥应填入 `LLM_API_KEY`。程序不会读取 Codex 登录信息，DeepSeek 的 API 权限和余额由你的开放平台账户提供。
 
-保存后启动：
-
-```bash
-node --env-file=.env src/agent/langchain/cli.mjs "A1001 现在到哪一步了，谁在审批？"
-```
-
-也可以将这三项设为环境变量后，运行 `node src/agent/langchain/cli.mjs "A1001 谁在审批？"`。未提供问题时使用默认的 A1001 查询。已有环境变量优先于 `.env` 中的同名值，切换服务时请一并检查。
+保存后运行 `npm run build` 和 `npm start`，打开工作台，选择实现版本与「真实模型」并发送问题。已有环境变量优先于 `.env` 中的同名值，切换服务时请一并检查。
 
 接口格式按 DeepSeek 官方 [Tool Calls](https://api-docs.deepseek.com/guides/tool_calls/) 和 [Chat Completions API](https://api-docs.deepseek.com/api/create-chat-completion/) 核实。它兼容 OpenAI 格式，继续使用 `system` 消息、`tools`、`tool_calls` 和 `tool_call_id`，查询函数及工具循环保持原来的分工。
 
@@ -258,7 +183,7 @@ const orderTool = tool(({ orderId }) => JSON.stringify(getOrder({ orderId })), {
 
 `tool_call_id` 对应模型刚才给出的 `id`，用于说明“这是哪一次调用的结果”。`content` 也是 JSON 字符串。不是只把查询结果单独发过去。
 
-**第二次返回：模型 → Node。** 模型根据工具结果组织中文回答，例如“订单 A1001 正在等待审批，当前审批人为采购负责人”。Node 打印文本并结束。
+**第二次返回：模型 → Node。** 模型根据工具结果组织中文回答，例如“订单 A1001 正在等待审批，当前审批人为采购负责人”。Node 返回文本，经 Runtime 显示在页面。
 
 模型负责理解提问、提出调用请求和组织回答。运行在 Node.js 中的 LangChain 负责调用模型、执行注册工具、追加 ToolMessage 和继续循环；我们负责业务函数、规则和可观察性。`src/agent/langchain/agent.mjs` 没有手写 `for` 循环或 `messages.push`，第一步的查询函数仍是普通服务端代码。
 
@@ -267,7 +192,7 @@ const orderTool = tool(({ orderId }) => JSON.stringify(getOrder({ orderId })), {
 - 正常查询通常需要两次模型请求。模型也可能直接追问订单号，此时不会执行工具。
 - 默认最多请求模型 4 次，每次请求限时 30 秒，超时包括响应体读取。最后一次若仍要求调用工具，程序停止并报错。
 - 未知工具或非法参数不会执行函数，而是将结构化错误按调用 ID 回传，模型可在剩余次数内纠正。不存在的订单是正常的 `found: false` 查询结果。
-- 缺少/重复调用 ID、HTTP 失败、非法 JSON、响应截断或空回答会报错退出，退出码为 1。
+- 缺少/重复调用 ID、HTTP 失败、非法 JSON、响应截断或空回答会结束本次运行并展示错误。
 - 日志展示调用请求、查询结果和回传 ID，不打印鉴权头或服务端错误原文。配置密钥若出现在教学日志中会被替换为 `[REDACTED]`。
 
 ## 离线验证与真实调用的区别
@@ -278,11 +203,11 @@ node --test test/langchain.test.mjs
 
 测试只启动监听 `127.0.0.1` 随机端口的模拟 HTTP 服务，使用固定假密钥，不需要 `.env`，不连接真实模型。它执行真实的 LangChain Agent、ChatOpenAI HTTP 请求、参数校验、`getOrder` 和结果回传，检查发送给 HTTP 对端的消息及调用 ID。
 
-**模拟服务的工具请求和最终回答是预先写好的。** 测试证明程序能走通协议和错误处理，不能证明真实模型会正确选择工具或正确回答。DeepSeek 专项用例检查 `/chat/completions` 路径、`deepseek-flash` 模型名、每次请求关闭思考模式，以及真实查询结果按调用 ID 回传。本机填好有效密钥后，通过命令行或下面的页面测试真实链路。
+**模拟服务的工具请求和最终回答是预先写好的。** 测试证明程序能走通协议和错误处理，不能证明真实模型会正确选择工具或正确回答。DeepSeek 专项用例检查 `/chat/completions` 路径、`deepseek-flash` 模型名、每次请求关闭思考模式，以及真实查询结果按调用 ID 回传。本机填好有效密钥后，通过下面的页面测试真实链路。
 
 # 第三步：CopilotKit 订单助手
 
-网页采用 React 19 + CopilotKit 1.74.0 的 v2 API，构建工具为 Vite。使用自托管 Runtime，不需要 Copilot Cloud 账号。命令行入口继续保留，网页统一通过 `/api/copilotkit` 运行 Agent。
+网页采用 React 19 + CopilotKit 1.74.0 的 v2 API，构建工具为 Vite。使用自托管 Runtime，不需要 Copilot Cloud 账号。网页统一通过 `/api/copilotkit` 运行 Agent。
 
 ```bash
 npm ci --ignore-scripts
@@ -296,7 +221,7 @@ npm start
 
 打开 [Copilot Runtime 学习页](http://127.0.0.1:3210/learn/runtime)，先读三种 Web 实现共用的页面接入、Agent 分发与事件回传；再按需进入[原生 JavaScript](http://127.0.0.1:3210/learn/native)、[LangChain](http://127.0.0.1:3210/learn) 或 [LangGraph](http://127.0.0.1:3210/learn/langgraph) 学习页。工作台顶部的导读入口跟随当前实现版本；每条实现教程和学习页顶部都可跳转到 Runtime 教程。
 
-- Copilot Runtime 独立四节：共用 Web 链路、Provider 与 HTTP 注册、OrderAgent 执行及 AG-UI 事件、页面渲染与会话边界。命令行入口直接调用 Agent，不经过 Runtime。
+- Copilot Runtime 独立四节：共用 Web 链路、Provider 与 HTTP 注册、OrderAgent 执行及 AG-UI 事件、页面渲染与会话边界。
 - LangChain 保留七节内容，依次讲解项目分工、LangChain 核心概念、工具定义、模型配置、Agent 循环、结果渲染、可靠性与 Token。
 - LangGraph 新增六节：两版分工、State / Reducer、模型与工具节点、普通边与条件边、逐步走图、两版对照与扩展。各课程学习进度独立保存，旧版进度继续保留。
 - LangGraph 教学图可逐步查看状态消息、分支和两类调用计数；它是固定脚本，工作台的真实执行记录则由后端图节点产生。
@@ -321,12 +246,6 @@ npm start
 | LangChain / LangGraph + 本地演示 | `demo` | 共用固定规则，查询真实的本地虚构数据，不运行模型编排 |
 
 切换版本或模式会开始新对话，消息和 Token 统计同时重置；运行中禁用切换。三版使用同一份模型配置、业务规则和订单数据。LangGraph 额外在调用详情展示 `graph_node`、`graph_edge` 事件，不把图节点数当作模型请求数。
-
-LangGraph 命令行入口：
-
-```bash
-node --env-file=.env src/agent/langgraph/cli.mjs "A1001 谁在审批？"
-```
 
 图路径为 `START → model → tools → model → END`；model 后按是否含 tool_calls 选择 tools 或 END。三版均保留请求上限、超时、取消、参数校验和脱敏。当前均未启用逐 Token 文字输出、持久化或人工审批恢复。
 
@@ -388,8 +307,6 @@ src/agent/langgraph/agent.mjs      LangGraph 状态、节点、条件边与图�
 src/agent/common/model-transport.mjs  HTTP 观察、原始用量、协议校验与请求超时
 src/server/http-server.mjs   本机 HTTP、静态文件、配置与 Runtime 路由
 src/server/main.mjs               读取环境配置并启动 HTTP 服务
-src/agent/langchain/cli.mjs                启动 LangChain CLI
-src/agent/langgraph/cli.mjs      启动 LangGraph CLI
 ```
 
 ## 验证
@@ -404,14 +321,7 @@ npm run build
 参考：[CopilotKit 工具渲染](https://docs.copilotkit.ai/reference/hooks/useRenderTool)、[自托管 Runtime](https://docs.copilotkit.ai/runtime-server-adapter)。本项目使用的 CopilotKit 开源包为 MIT，依赖许可保留于各包 LICENSE 中。
 
 
-# 第四步：对照迁移前后的实现
-
-迁移前基线提交为 `1b2fb28`。迁移改动保留在工作区，可用以下命令查看：
-
-```bash
-git show 1b2fb28:step2.mjs
-git diff 1b2fb28 -- src/agent/langchain/cli.mjs src agent server src/web/components/chat/TracePanel.jsx package.json README.md
-```
+# 第四步：对照三种编排方式
 
 | 负责的工作 | 原生版本 | LangChain 版本 |
 | --- | --- | --- |

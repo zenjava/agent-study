@@ -1,6 +1,6 @@
 /**
  * LangChain 版问答：createAgent 接管模型与工具循环，中间件负责校验、限次和事件记录。
- * 输入由服务端或 CLI 提供；返回最终文字，执行过程通过 onEvent 交给观察面板与协议适配层。
+ * 输入由服务端提供；返回最终文字，执行过程通过 onEvent 交给观察面板与协议适配层。
  */
 import { randomUUID } from 'node:crypto';
 import { createAgent, createMiddleware } from 'langchain';
@@ -33,11 +33,11 @@ export async function runOrderQuestion({
   if (![baseURL, model, apiKey].every(/** 确认模型地址、名称和密钥均为非空字符串。 */ (value) => typeof value === 'string' && value.trim())) {
     throw new Error('请配置 LLM_BASE_URL、LLM_MODEL、LLM_API_KEY。' +
       '在项目目录执行 cp -n .env.example .env，再在本机编辑 .env；' +
-      '使用 node --env-file=.env src/agent/langchain/cli.mjs 启动。');
+      '使用 npm start 启动 Web 服务。');
   }
   if (['replace-with-your-deepseek-api-key', 'replace-with-your-openai-api-key'].includes(apiKey.trim())) {
     throw new Error('请在本机 .env 中将 LLM_API_KEY 的占位符替换为你的 DeepSeek API key，' +
-      '然后使用 node --env-file=.env src/agent/langchain/cli.mjs 启动。不要把密钥发到聊天中。');
+      '然后重启 Web 服务。不要把密钥发到聊天中。');
   }
   if (typeof question !== 'string' || !question.trim()) throw new Error('请输入问题。');
   if (!Number.isSafeInteger(maxSteps) || maxSteps < 1 ||

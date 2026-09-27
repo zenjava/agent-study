@@ -1,6 +1,6 @@
 /**
  * 原生 Agent 的一次问答：手动维护消息、调用模型、执行工具，直到得到文字回答。
- * 只依赖本地纯 JavaScript 模块；fetchImpl 可替换为离线脚本，Web 与 CLI 共用同一循环。
+ * 只依赖本地纯 JavaScript 模块；fetchImpl 可替换为离线脚本供 Web 演示。
  */
 import { getOrder } from '../common/tools/get-order.mjs';
 import { orderToolDefinition, systemPrompt } from '../common/order-definition.mjs';
@@ -31,7 +31,7 @@ export async function runOrderQuestionNative({
   if (![baseURL, model, apiKey].every(/** 确认模型地址、名称和密钥均为非空字符串。 */ (value) => typeof value === 'string' && value.trim())) {
     throw new Error('请配置 LLM_BASE_URL、LLM_MODEL、LLM_API_KEY。' +
       '在项目目录执行 cp -n .env.example .env，再在本机编辑 .env；' +
-      '使用 node --env-file=.env src/agent/native/cli.mjs 启动。');
+      '使用 npm start 启动 Web 服务。');
   }
   if (['replace-with-your-deepseek-api-key', 'replace-with-your-openai-api-key'].includes(apiKey.trim())) {
     throw new Error('请在本机 .env 中将 LLM_API_KEY 的占位符替换为你的 DeepSeek API key，再重启服务。');
