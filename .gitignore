@@ -1,5 +1,7 @@
+# 忽略本机环境与密钥；只保留可分享的配置模板。
 .env
 .env.*
 !.env.example
+# 依赖由锁文件恢复，构建产物由 Vite 重新生成。
 node_modules/
 dist/

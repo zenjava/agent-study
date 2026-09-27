@@ -1,8 +1,13 @@
+/**
+ * AG-UI 适配层测试：注入可控 runner，核对领域事件到工具、文字和错误消息的转换。
+ * 使用事件收集代替浏览器，覆盖历史裁剪、空运行、脱敏与取消。
+ */
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { createOrderAgent, toConversation } from '../src/order-agent.mjs';
+import { createOrderAgent, toConversation } from '../src/server/order-agent.mjs';
 
 const input = (content) => ({ threadId: 'thread-test', runId: 'run-test', state: {}, tools: [], context: [], forwardedProps: {}, messages: [{ id: 'user-1', role: 'user', content }] });
+// 订阅直到完成后返回整段事件，便于同时断言事件顺序、字段与错误终态。
 async function collect(agent, request) {
   const events = [];
   await new Promise((resolve, reject) => agent.run(request).subscribe({ next: (event) => events.push(event), error: reject, complete: resolve }));

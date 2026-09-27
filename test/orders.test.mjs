@@ -1,6 +1,10 @@
+/**
+ * 纯业务数据测试：核对明细总额、卡片字段、未知订单以及查询结果的拷贝隔离。
+ * 不使用模型或网络，失败表示业务数据约定本身不一致。
+ */
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { getOrder, listOrderSummaries } from '../src/get-order.mjs';
+import { getOrder, listOrderSummaries } from '../src/agent/tools/get-order.mjs';
 
 test('订单明细、金额、收货和流程信息可用于卡片展示，金额与行项目一致', () => {
   const summaries = listOrderSummaries();
