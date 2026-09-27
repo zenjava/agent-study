@@ -121,6 +121,9 @@ test('只提供白名单静态文件和非秘密配置，不提供 .env 或源�
   });
   assert.equal(runtimePage.status, builtLesson === null ? 503 : 200);
   if (builtLesson !== null) assert.equal(await runtimePage.text(), builtLesson);
+  const architecturePage = await fetch(`${url}/learn/architecture`);
+  assert.equal(architecturePage.status, builtLesson === null ? 503 : 200);
+  if (builtLesson !== null) assert.equal(await architecturePage.text(), builtLesson);
 });
 
 test('无效输入和跨站请求不会触发模型', /** 验证：无效输入和跨站请求不会触发模型。 */ async (t) => {

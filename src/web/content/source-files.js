@@ -19,6 +19,7 @@ import workspaceSource from '../pages/chat/ChatWorkspace.jsx?raw';
 import runSource from '../state/chat/useChatRun.js?raw';
 import sessionSource from '../state/chat/useChatSession.js?raw';
 import assistantSource from '../components/chat/AssistantMessage.jsx?raw';
+import composerSource from '../components/chat/Composer.jsx?raw';
 import entrySource from '../entries/main.jsx?raw';
 import cardSource from '../components/chat/OrderCard.jsx?raw';
 import serverSource from '../../server/http-server.mjs?raw';
@@ -42,6 +43,7 @@ export const files = {
   'src/web/state/chat/useChatRun.js': runSource,
   'src/web/state/chat/useChatSession.js': sessionSource,
   'src/web/components/chat/AssistantMessage.jsx': assistantSource,
+  'src/web/components/chat/Composer.jsx': composerSource,
   'src/web/entries/main.jsx': entrySource,
   'src/web/components/chat/OrderCard.jsx': cardSource,
   'src/server/http-server.mjs': serverSource,

@@ -14,7 +14,7 @@ harness/
 │   │   │   └── demo/          # 页面演示场景、提示词与预览数据
 │   │   ├── styles/            # 聊天、教程样式与设计变量
 │   │   ├── index.html         # 工作台 HTML 壳
-│   │   └── learn.html         # 三种实现与 Runtime 教程共用的 HTML 壳
+│   │   └── learn.html         # 全栈架构图与四门原有课程共用的 HTML 壳
 │   ├── server/
 │   │   ├── main.mjs            # HTTP 服务启动入口
 │   │   ├── http-server.mjs     # 路由、静态资源与响应流
@@ -219,7 +219,7 @@ npm start
 
 ### 交互式代码导读
 
-打开 [Copilot Runtime 学习页](http://127.0.0.1:3210/learn/runtime)，先读三种 Web 实现共用的页面接入、Agent 分发与事件回传；再按需进入[原生 JavaScript](http://127.0.0.1:3210/learn/native)、[LangChain](http://127.0.0.1:3210/learn) 或 [LangGraph](http://127.0.0.1:3210/learn/langgraph) 学习页。工作台顶部的导读入口跟随当前实现版本；每条实现教程和学习页顶部都可跳转到 Runtime 教程。
+打开 [全栈架构教程](http://127.0.0.1:3210/learn/architecture)，在同一张图中沿 Web → 服务端 → Agent → 模型与工具 → Web 的路径逐步播放；悬停节点可查看处理逻辑，点击源码链接可定位真实代码。图中可切换原生 JavaScript、LangChain、LangGraph 三种真实模型实现。然后阅读 [Copilot Runtime 学习页](http://127.0.0.1:3210/learn/runtime) 的共用接入层，或按需进入[原生 JavaScript](http://127.0.0.1:3210/learn/native)、[LangChain](http://127.0.0.1:3210/learn)、[LangGraph](http://127.0.0.1:3210/learn/langgraph) 学习页。
 
 - Copilot Runtime 独立四节：共用 Web 链路、Provider 与 HTTP 注册、OrderAgent 执行及 AG-UI 事件、页面渲染与会话边界。
 - LangChain 保留七节内容，依次讲解项目分工、LangChain 核心概念、工具定义、模型配置、Agent 循环、结果渲染、可靠性与 Token。
@@ -231,7 +231,7 @@ npm start
 - 代码片段来自构建时明确列出的仓库源码，显示实际行号；不导入 `.env`。修改被引用的源码后需重新 `npm run build`。
 - 每节小测答对后保存本浏览器的学习进度，可随时跳转章节。学习进度与订单对话独立。
 
-页面入口是 `src/web/learn.html`、`src/web/entries/learn.jsx`，页面组装在 `src/web/pages/learning/`，课程在 `src/web/content/*learning-content.js`，源码白名单与节选定位在 `src/web/content/source-files.js`，样式在 `src/web/styles/learn.css`。Vite 使用两个 HTML 入口；四条课程共用页面壳，独立的交互导读位于 `src/web/components/learning/`。学习页只阅读构建时源码，不加载 Copilot Runtime，也不替代真实模型验证。四条路线分别保存进度，已有三条路线的存储 key 保持不变。
+页面入口是 `src/web/learn.html`、`src/web/entries/learn.jsx`，页面组装在 `src/web/pages/learning/`，课程内容在 `src/web/content/`，源码白名单与节选定位在 `src/web/content/source-files.js`。Vite 使用两个 HTML 入口；架构图和四门课程共用学习页 HTML 壳，架构图交互位于 `src/web/components/learning/ArchitectureFlow.jsx`，样式位于 `src/web/styles/architecture.css`。学习页只阅读构建时源码，不加载 Copilot Runtime，也不替代真实模型验证。四门课程分别保存进度，架构图没有答题进度。
 
 ## 三个实现版本并存
 

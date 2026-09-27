@@ -128,6 +128,7 @@ button { color: inherit; }
 .course-switch a[aria-current=page] { background: var(--green); border-color: var(--green); color: white; }
 .course-switch small { margin-left: 8px; font-size: 10px; opacity: .8; }
 .course-switch p { margin: 0 0 0 auto; color: var(--muted); font-size: 11px; }
+@media (max-width: 1180px) { .course-switch > span { flex-basis: 100%; } .course-switch p { display: none; } }
 .runtime-course-link { margin: 16px 0; font-size: 13px; line-height: 1.8; color: var(--muted); }
 .runtime-course-link a { color: var(--green); text-decoration: underline; }
 .graph-walkthrough { border: 1px solid var(--line); background: #fafbf5; margin: 25px 0; overflow: hidden; }
