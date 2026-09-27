@@ -7,7 +7,14 @@ import { readFile } from 'node:fs/promises';
 import { listOrderSummaries } from '../agent/common/tools/get-order.mjs';
 import { createCopilotHandler } from './copilot-handler.mjs';
 
-// 只构建服务对象，不在此处监听端口，便于启动入口与测试分别决定监听地址。
+/**
+ * 创建尚未监听的本机 HTTP 服务，提供静态页面、公开数据及 CopilotKit 事件流接口。
+ * @param {object} config 模型配置，仅服务端持有 apiKey。
+ * @param {string} [config.baseURL] 模型接口基础地址。
+ * @param {string} [config.model] 模型名称。
+ * @param {string} [config.apiKey] 模型密钥。
+ * @returns {import("node:http").Server} 由入口或测试负责监听和关闭的服务对象。
+ */
 export function createHarnessServer(config) {
   // 多条教程 URL 共用一个 HTML 壳，浏览器入口再根据 pathname 选择课程。
   const pages = new Map([
@@ -15,10 +22,16 @@ export function createHarnessServer(config) {
     ['/learn/langchain', 'learn.html'], ['/learn/langgraph', 'learn.html'], ['/learn/native', 'learn.html'],
   ]);
   let copilotHandler;
-  const server = createServer(async (req, res) => {
+  const server = createServer(/** 处理本机 HTTP 请求，分发页面、公开数据和 CopilotKit 接口，并转发响应流。 */ async (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; object-src 'none'");
+    /**
+     * 以给定状态码结束当前 HTTP 请求，统一使用 UTF-8 JSON 响应。
+     * @param {number} status HTTP 状态码。
+     * @param {*} data 可序列化的响应数据。
+     * @returns {void}
+     */
     const json = (status, data) => {
       res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' });
       res.end(JSON.stringify(data));
@@ -46,11 +59,11 @@ export function createHarnessServer(config) {
           raw = Buffer.concat(chunks);
         }
         // 并发首次请求共享初始化 Promise；初始化失败后清空缓存，允许后续请求重试。
-        copilotHandler ??= createCopilotHandler(config).catch((error) => { copilotHandler = undefined; throw error; });
+        copilotHandler ??= createCopilotHandler(config).catch(/** 清除初始化失败的 Runtime 缓存，将错误交给本次请求处理。 */ (error) => { copilotHandler = undefined; throw error; });
         const handler = await copilotHandler;
         const controller = new AbortController();
         // 浏览器断开时向下游传播取消，避免客户端已离开但后端仍持续工作。
-        res.on('close', () => controller.abort());
+        res.on('close', /** 在浏览器连接关闭时取消下游模型与事件流。 */ () => controller.abort());
         // 将 Node 请求适配为 Web Request；返回的 SSE 流按块转发，不拼成一个完整 JSON。
         const response = await handler(new Request(`http://${req.headers.host}${req.url}`, {
           method: req.method, headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
@@ -66,7 +79,7 @@ export function createHarnessServer(config) {
               if (done) break;
               res.write(value);
             }
-          } finally { await reader.cancel().catch(() => {}); }
+          } finally { await reader.cancel().catch(/** 忽略释放已结束响应流时的取消错误。 */ () => {}); }
         }
         res.end();
       } catch {

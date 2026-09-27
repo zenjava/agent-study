@@ -13,6 +13,10 @@ const steps = [
   ['Agent：执行订单查询', 'src/agent/common/tools/get-order.mjs', 'getOrder 查询虚构订单。工具结果沿事件流返回，Web 的 OrderCard 展示订单，TracePanel 展示调用过程与用量。'],
 ];
 
+/**
+ * 展示浏览器、服务端与 Agent 的调用路径及对应源码入口。
+ * @returns {React.ReactElement} 当前组件的渲染结果。
+ */
 export function FullStackGuide() {
   return <section className="runtime-guide" aria-label="Web、服务端与 Agent 调用链">
     <div className="runtime-map">
@@ -23,7 +27,7 @@ export function FullStackGuide() {
       <div><span className="eyebrow">Agent · Node.js</span><strong>模型与工具编排</strong><code>src/agent/</code></div>
     </div>
     <div className="runtime-identities"><h3>沿着一次查单阅读源码</h3><ol>
-      {steps.map(([title, file, description]) => <li key={file}>
+      {steps.map(/** 渲染调用链的一步，展示职责及可跳转的实际源码。 */ ([title, file, description]) => <li key={file}>
         <h4>{title}</h4><SourceLink source={{ file }} /><p>{description}</p>
       </li>)}
     </ol><p>服务端与 Agent 运行在同一个 Node.js 进程中。这里的分层表示代码职责；外部模型 API 才是独立的模型服务。当前没有配置长期记忆或持久化会话。</p></div>

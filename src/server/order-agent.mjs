@@ -7,52 +7,98 @@ import { Observable } from 'rxjs';
 import { runOrderQuestion } from '../agent/langchain/agent.mjs';
 import { runDemo } from '../agent/common/demo/rules.demo.mjs';
 
-// 历史用于追问理解；工具结果始终由服务器重新查询，客户端不能注入 system。
+/**
+ * 提取最后一条有效用户问题及最近二十条文字历史，丢弃客户端工具和系统消息。
+ * @param {Array<{role: string, content: *}>} [messages=[]] 前端提交的消息列表。
+ * @returns {{question: string, history: Array<{role: string, content: string}>}} 本轮问题与裁剪后的历史；无有效问题时返回空值。
+ * @throws {Error} 当前问题超过 2000 个字符时抛出。
+ */
 export function toConversation(messages = []) {
   const last = messages.at(-1);
   if (last?.role !== 'user' || typeof last.content !== 'string' || !last.content.trim()) {
     return { question: '', history: [] };
   }
   if (last.content.length > 2000) throw new Error('问题最多 2000 个字符。');
-  const history = messages.slice(0, -1).filter((message) =>
+  const history = messages.slice(0, -1).filter(/** 只保留内容非空的用户和助手文字，排除系统指令及工具结果。 */ (message) =>
     ['user', 'assistant'].includes(message.role) && typeof message.content === 'string' && message.content.trim(),
-  ).slice(-20).map(({ role, content }) => ({ role, content: content.slice(0, 6000) }));
+  ).slice(-20).map(/** 复制消息角色并限制单条历史文本的长度。 */ ({ role, content }) => ({ role, content: content.slice(0, 6000) }));
   return { question: last.content.trim(), history };
 }
 
-// 通过 runner 注入不同编排实现；demo 标记同时决定前端观察记录的模式说明。
+/**
+ * 将演示标记与查询实现注入 AG-UI 代理，供 Runtime 按 agentId 调用。
+ * @param {object} config 服务端模型配置。
+ * @param {object} [options={}] 实现选择参数。
+ * @param {boolean} [options.demo=false] 是否将观察事件标记为演示模式。
+ * @param {Function} [options.runner] 问答函数，默认按 demo 选择规则演示或 LangChain 实现。
+ * @returns {OrderAgent} 新建的协议代理实例。
+ */
 export function createOrderAgent(config, { demo = false, runner = demo ? runDemo : runOrderQuestion } = {}) {
   return new OrderAgent(config, demo, runner);
 }
 
 // AG-UI 协议代理：Runtime 调用 run 获得 Observable，每个订阅对应可取消的一次运行。
 class OrderAgent extends AbstractAgent {
+  /**
+   * 保存运行配置与问答实现，并为当前代理建立取消控制器集合。
+   * @param {object} config 服务端模型配置。
+   * @param {boolean} demo 是否运行演示模式。
+   * @param {Function} runner 接收问题、历史和事件回调的问答实现。
+   */
   constructor(config, demo, runner) {
     super({ description: demo ? '本地订单演示，不调用模型' : '订单查询助手' });
     this.config = config; this.demo = demo; this.runner = runner;
     this.controllers = new Set();
   }
 
-  // Runtime 会为每次运行复制 Agent，配置与查询实现由服务端保留。
+  /**
+   * 复制代理配置与执行函数，使 Runtime 的每次运行拥有独立的取消控制器集合。
+   * @returns {OrderAgent} 配置相同、运行状态独立的新实例。
+   */
   clone() { return new OrderAgent(this.config, this.demo, this.runner); }
 
-  // 显式停止所有当前运行，并继续调用基类的停止逻辑。
+  /**
+   * 取消当前实例上的所有运行，再调用 AG-UI 基类的停止逻辑。
+   * @returns {void}
+   */
   abortRun() {
     for (const controller of this.controllers) controller.abort();
     super.abortRun();
   }
 
-  // 把一次运行包装为事件流；订阅清理时同步取消底层模型请求。
+  /**
+   * 将一次问答适配为 AG-UI 事件流；每次订阅创建独立运行，取消订阅会中断底层请求。
+   * @param {object} input Runtime 提供的运行请求，包含 runId、threadId 和 messages。
+   * @returns {import("rxjs").Observable<object>} 发出运行、工具、回答和观察事件的流。
+   */
   run(input) {
-    return new Observable((subscriber) => {
+    return new Observable(/** 为每个订阅建立取消控制器，启动问答并返回释放运行的清理函数。 */ (subscriber) => {
       const controller = new AbortController();
       this.controllers.add(controller);
       const { runId, threadId } = input;
+      /**
+       * 仅向仍处于订阅状态的观察者发送 AG-UI 事件。
+       * @param {object} event 待发送的协议事件。
+       * @returns {void}
+       */
       const send = (event) => { if (!subscriber.closed) subscriber.next(event); };
-      // 自定义 harness 事件保留领域细节，标准工具与文字事件另行驱动聊天 UI。
+      /**
+       * 为领域事件附加运行 ID 和模式，并包装为 AG-UI 自定义事件。
+       * @param {object} event 原始领域事件。
+       * @returns {void}
+       */
       const trace = (event) => send({ type: 'CUSTOM', name: 'harness', value: { ...event, runId, mode: this.demo ? 'demo' : 'live' } });
-      // 将提供商调用 ID 加上 runId，避免不同轮次都返回 call_1 时覆盖旧卡片。
+      /**
+       * 为供应商工具调用 ID 添加运行前缀，避免不同问答中的同名调用覆盖 UI 结果。
+       * @param {string} id 供应商返回的工具调用 ID。
+       * @returns {string} 当前运行内的工具调用标识。
+       */
       const callId = (id) => `${runId}:${id}`;
+      /**
+       * 保留原始领域记录，并将工具请求、结果及回答转换为前端可消费的 AG-UI 事件。
+       * @param {object} event 包含 type、data 和 step 的领域事件。
+       * @returns {void}
+       */
       const onEvent = (event) => {
         trace(event);
         const { type, data, step } = event;
@@ -70,14 +116,19 @@ class OrderAgent extends AbstractAgent {
           send({ type: 'TEXT_MESSAGE_END', messageId });
         }
       };
-      (async () => {
+      (/** 执行本轮问答，发送开始与终态事件，并在结束时释放控制器。 */ async () => {
         send({ type: 'RUN_STARTED', runId, threadId });
         try {
           const { question, history } = toConversation(input.messages);
           // CopilotChat 初次连接会启动空运行；它不应产生费用。
           if (question) {
             trace({ type: 'start', data: { question } });
-            const options = { ...this.config, question, history, onEvent, log: () => {}, signal: controller.signal };
+            const options = { ...this.config, question, history, onEvent,
+              /**
+               * 忽略控制台日志，由事件流或测试断言记录运行结果。
+               * @returns {void}
+               */
+              log: () => {}, signal: controller.signal };
             await this.runner(options);
             trace({ type: 'complete' });
           }
@@ -89,7 +140,7 @@ class OrderAgent extends AbstractAgent {
           send({ type: 'RUN_ERROR', message });
         } finally { this.controllers.delete(controller); subscriber.complete(); }
       })();
-      return () => { controller.abort(); this.controllers.delete(controller); };
+      return /** 取消底层运行并从当前代理移除其控制器。 */ () => { controller.abort(); this.controllers.delete(controller); };
     });
   }
 }

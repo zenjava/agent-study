@@ -13,12 +13,12 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const server = createHarnessServer({
     baseURL: process.env.LLM_BASE_URL, model: process.env.LLM_MODEL, apiKey: process.env.LLM_API_KEY,
   });
-  server.on('error', (error) => {
+  server.on('error', /** 报告端口占用或启动失败，并设置进程失败状态。 */ (error) => {
     console.error(error.code === 'EADDRINUSE' ? '端口已占用，请使用 PORT=3211 更换端口。' : '本地服务启动失败。');
     process.exitCode = 1;
   });
   // 绑定环回地址，默认只供本机浏览器访问；PORT 可用于并行预览或避开端口冲突。
-  server.listen(Number(process.env.PORT || 3210), '127.0.0.1', () => {
+  server.listen(Number(process.env.PORT || 3210), '127.0.0.1', /** 在本机监听成功后输出包含实际端口的页面地址。 */ () => {
     console.log(`工具调用实验台：http://127.0.0.1:${server.address().port}`);
   });
 }

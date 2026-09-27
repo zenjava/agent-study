@@ -7,7 +7,11 @@ import { runOrderQuestionGraph } from '../agent/langgraph/agent.mjs';
 import { runOrderQuestionNative } from '../agent/native/agent.mjs';
 import { runNativeDemo } from '../agent/native/demo/model.demo.mjs';
 
-// 创建并返回标准 Web Request → Response 处理器，供原生 Node HTTP 服务桥接。
+/**
+ * 注册三种 Agent 实现与两种演示模式，创建 Copilot Runtime 的标准 HTTP 处理器。
+ * @param {object} config 服务端模型配置，包含 baseURL、model、apiKey。
+ * @returns {Promise<Function>} 以 Web Request 为输入、返回 Response 的 Runtime 处理器。
+ */
 export async function createCopilotHandler(config) {
   process.env.COPILOTKIT_TELEMETRY_DISABLED = 'true';
   // 先设置遥测开关再动态加载 Runtime；实际初始化推迟到第一次对话接口请求。

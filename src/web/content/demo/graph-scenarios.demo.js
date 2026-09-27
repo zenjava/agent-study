@@ -4,6 +4,11 @@
  */
 import { getOrder } from '../../../agent/common/tools/get-order.mjs';
 
+/**
+ * 为所选场景生成图节点、条件边及消息状态的教学步骤。
+ * @param {string} scenario 场景标识：found（查到）、absent（未找到）或 missing（缺少订单号）。
+ * @returns {Array<object>} 按执行顺序排列的图回放快照。
+ */
 export function graphSteps(scenario) {
   const missing = scenario === 'missing';
   const orderId = scenario === 'absent' ? 'A9999' : 'A1001';

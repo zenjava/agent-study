@@ -4,8 +4,18 @@
  */
 import { getOrder } from '../../../agent/common/tools/get-order.mjs';
 
+/**
+ * 将演示报文格式化为缩进两格的 JSON，供页面阅读。
+ * @param {*} value 可序列化的演示数据。
+ * @returns {string} 格式化后的 JSON 文本。
+ */
 const json = (value) => JSON.stringify(value, null, 2);
 
+/**
+ * 构造一次工具调用前后的请求、回复及回传报文，供原生协议实验区逐步阅读。
+ * @param {string} scenario 场景标识：found（查到）、absent（未找到）或 missing（缺少订单号）。
+ * @returns {Array<object>} 含说明和协议数据的演示步骤。
+ */
 export function scenarioSteps(scenario) {
   const missing = scenario === 'missing';
   const orderId = scenario === 'absent' ? 'A9999' : 'A1001';

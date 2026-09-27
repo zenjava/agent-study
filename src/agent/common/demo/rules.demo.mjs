@@ -4,10 +4,19 @@
  */
 import { getOrder } from '../tools/get-order.mjs';
 
-// 共用固定规则 Demo：通过订单号匹配生成查询事件，不经过任何模型编排框架。
+/**
+ * 根据当前问题和最近文字历史匹配最多三张订单，以固定规则发送工具及回答事件。
+ * @param {object} options 演示运行参数。
+ * @param {string} options.question 本轮用户问题。
+ * @param {Array<{role: string, content: string}>} options.history 先前文字消息。
+ * @param {function(object): void} options.onEvent 工具调用、查询结果和最终回答的接收函数。
+ * @param {AbortSignal} options.signal 用于取消演示等待的信号。
+ * @returns {Promise<void>} 所有演示事件发送完毕后完成。
+ * @throws {Error} 等待期间已取消运行时拒绝。
+ */
 export async function runDemo({ question, history, onEvent, signal }) {
   const explicit = question.toUpperCase().match(/\bA\d+\b/g);
-  const previous = history.map((message) => message.content).join(' ').toUpperCase().match(/\bA\d+\b/g);
+  const previous = history.map(/** 提取历史消息正文，供固定规则寻找最近的订单号。 */ (message) => message.content).join(' ').toUpperCase().match(/\bA\d+\b/g);
   const orderIds = [...new Set(explicit ?? previous?.slice(-1) ?? [])].slice(0, 3);
   if (!orderIds.length) {
     onEvent({ type: 'answer', step: 1, data: { content: '请提供要查询的订单号，例如 **A1001**。\n\n当前为本地演示，回答由固定规则生成。' } });
@@ -18,10 +27,14 @@ export async function runDemo({ question, history, onEvent, signal }) {
     const id = `demo_${index + 1}`;
     onEvent({ type: 'tool_call', step: 1, data: { id, type: 'function', function: { name: 'getOrder', arguments: JSON.stringify({ orderId }) } } });
     // 短暂延迟用于展示工具加载态，同时支持停止按钮即时中断演示。
-    await new Promise((resolve, reject) => {
+    await new Promise(/** 建立可取消的短暂等待，让界面能够展示工具加载状态。 */ (resolve, reject) => {
       if (signal.aborted) return reject(new Error('本次请求已取消。'));
+      /**
+       * 取消演示延迟，清除计时器并使等待中的 Promise 失败。
+       * @returns {void}
+       */
       const abort = () => { clearTimeout(timer); reject(new Error('本次请求已取消。')); };
-      const timer = setTimeout(() => { signal.removeEventListener('abort', abort); resolve(); }, 350);
+      const timer = setTimeout(/** 演示延迟结束后移除取消监听并继续查询。 */ () => { signal.removeEventListener('abort', abort); resolve(); }, 350);
       signal.addEventListener('abort', abort, { once: true });
     });
     const result = getOrder({ orderId });

@@ -10,10 +10,10 @@ export { systemPrompt } from './order-definition.mjs';
 
 // 同一份 Schema 既生成模型看到的工具参数定义，也在 Node 执行前校验输入。
 export const orderSchema = z.object({
-  orderId: z.string().refine((value) => value.trim().length > 0).describe(orderParameters.properties.orderId.description),
+  orderId: z.string().refine(/** 拒绝仅包含空白字符的订单号。 */ (value) => value.trim().length > 0).describe(orderParameters.properties.orderId.description),
 }).strict();
 // 框架调用这个包装函数时才执行 getOrder；JSON 字符串便于作为工具消息回传模型。
-export const orderTool = tool(({ orderId }) => JSON.stringify(getOrder({ orderId })), {
+export const orderTool = tool(/** 执行真实订单查询并将结果序列化为工具消息文本。 */ ({ orderId }) => JSON.stringify(getOrder({ orderId })), {
   name: 'getOrder',
   description: orderDescription,
   schema: orderSchema,

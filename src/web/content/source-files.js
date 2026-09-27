@@ -55,12 +55,19 @@ export const files = {
   'src/agent/langgraph/cli.mjs': langgraphEntrySource,
 };
 
-// 行号从本次构建的实际源码推导，避免代码移动后仍指向旧位置。
+/**
+ * 从构建时源码快照中按起止文本截取代码，并保留实际起始行号。
+ * @param {string} file 源码白名单中的文件路径。
+ * @param {string} start 起始行包含的锚点文本。
+ * @param {string} end 结束行包含的锚点文本。
+ * @returns {{file: string, line: number, code: string}} 包含结束行的节选与从 1 开始的行号。
+ * @throws {Error} 锚点缺失或结束锚点无法在起始位置之后找到时抛出。
+ */
 export function excerpt(file, start, end) {
   const lines = files[file].split('\n');
   // 起止锚点都从同一份源码寻找；缺失时直接报错，避免教程静默展示错误片段。
-  const first = lines.findIndex((line) => line.includes(start));
-  const last = lines.findIndex((line, index) => index >= first && line.includes(end));
+  const first = lines.findIndex(/** 匹配源码中的第一个起始锚点行。 */ (line) => line.includes(start));
+  const last = lines.findIndex(/** 从起始位置向后查找结束锚点行。 */ (line, index) => index >= first && line.includes(end));
   if (first < 0 || last < first) throw new Error(`教学代码定位失败：${file}`);
   return { file, line: first + 1, code: lines.slice(first, last + 1).join('\n') };
 }

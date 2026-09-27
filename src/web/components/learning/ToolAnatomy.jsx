@@ -3,6 +3,10 @@
  */
 import React from 'react';
 
+/**
+ * 展示工具名称、用途、参数与执行函数之间的对应关系。
+ * @returns {React.ReactElement} 当前组件的渲染结果。
+ */
 export function ToolAnatomy() {
   return <div className="anatomy"><div><span className="eyebrow">模型看到的</span><h3>工具说明书</h3><dl><dt>name</dt><dd>getOrder</dd><dt>description</dt><dd>按订单号查询完整订单</dd><dt>schema</dt><dd>orderId: string</dd></dl></div><span className="anatomy-arrow" aria-hidden="true">↔</span><div><span className="eyebrow">程序执行的</span><h3>业务函数</h3><code>getOrder({'{ orderId }'})</code><p>输入订单号，查询数据，<br />返回 found 与 order。</p></div></div>;
 }

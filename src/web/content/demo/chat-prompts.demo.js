@@ -10,5 +10,9 @@ export const sampleActions = ['查看审批与明细', '查看物流与付款', 
 export const absentQuestion = '请查一下 A9999 的订单。';
 export const missingQuestion = '请帮我查一下订单进度。';
 
-// 订单列表由服务端提供，此处只按用户选择的编号生成预设问题。
+/**
+ * 将所选订单号填入查看详情的预设问题。
+ * @param {string} orderId 用户选择的订单号。
+ * @returns {string} 用于填入草稿的订单详情问题。
+ */
 export const detailQuestion = (orderId) => `请查看 ${orderId} 的订单详情，并说明当前进度。`;

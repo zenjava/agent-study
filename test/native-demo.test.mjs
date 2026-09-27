@@ -11,10 +11,10 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { runNativeDemo } from '../src/agent/native/demo/model.demo.mjs';
 
-test('原生 CLI 在没有 node_modules 的独立目录运行 Demo', async (t) => {
+test('原生 CLI 在没有 node_modules 的独立目录运行 Demo', /** 验证：原生 CLI 在没有 node_modules 的独立目录运行 Demo。 */ async (t) => {
   // 复制到独立临时目录运行，防止测试误从仓库 node_modules 找到依赖而掩盖无框架要求。
   const directory = await realpath(await mkdtemp(join(tmpdir(), 'harness-native-standalone-')));
-  t.after(() => rm(directory, { recursive: true, force: true }));
+  t.after(/** 删除本测试创建的独立演示目录。 */ () => rm(directory, { recursive: true, force: true }));
   for (const file of ['native/agent.mjs', 'native/demo/model.demo.mjs', 'common/order-definition.mjs', 'common/model-transport.mjs', 'common/tools/get-order.mjs', 'common/demo/orders.demo.json', 'common/demo/inputs.demo.json', 'native/cli.mjs']) {
     const target = join(directory, file);
     await mkdir(join(target, '..'), { recursive: true });
@@ -28,25 +28,52 @@ test('原生 CLI 在没有 node_modules 的独立目录运行 Demo', async (t) =
 });
 
 for (const [question, found] of [['查 A1001', true], ['查 A9999', false]]) {
-  test(`原生 Demo 完整循环：${question}`, async () => {
+  test(`原生 Demo 完整循环：${question}`, /** 验证：原生 Demo 完整循环：${question}。 */ async () => {
     const events = [];
-    const result = await runNativeDemo({ question, log: () => {}, onEvent: (event) => events.push(event) });
+    const result = await runNativeDemo({ question,
+      /**
+       * 忽略控制台日志，由事件流或测试断言记录运行结果。
+       * @returns {void}
+       */
+      log: () => {},
+      /**
+       * 收集 Agent 领域事件，供后续协议或工具结果断言使用。
+       * @param {object} event 当前步骤的领域事件。
+       * @returns {number} 收集后的事件数量。
+       */
+      onEvent: (event) => events.push(event) });
     assert.match(result, /脚本模拟模型/);
-    assert.equal(events.filter((e) => e.type === 'request').length, 2);
-    assert.equal(events.find((e) => e.type === 'tool_result').data.result.found, found);
-    assert.equal(events.filter((e) => e.type === 'usage').reduce((sum, e) => sum + e.data.total_tokens, 0), 0);
-    const returned = events.filter((e) => e.type === 'request')[1].data.messages.at(-1);
+    assert.equal(events.filter(/** 识别request事件。 */ (e) => e.type === 'request').length, 2);
+    assert.equal(events.find(/** 识别tool_result事件。 */ (e) => e.type === 'tool_result').data.result.found, found);
+    assert.equal(events.filter(/** 识别usage事件。 */ (e) => e.type === 'usage').reduce(/** 累计演示报告的 Token 数，核对零用量约定。 */ (sum, e) => sum + e.data.total_tokens, 0), 0);
+    const returned = events.filter(/** 识别request事件。 */ (e) => e.type === 'request')[1].data.messages.at(-1);
     assert.equal(returned.role, 'tool');
     assert.equal(returned.tool_call_id, 'native_demo_1');
   });
 }
 
-test('原生 Demo 无订单号时追问；连续追问复用文字历史并重新查询', async () => {
+test('原生 Demo 无订单号时追问；连续追问复用文字历史并重新查询', /** 验证：原生 Demo 无订单号时追问；连续追问复用文字历史并重新查询。 */ async () => {
   const events = [];
-  const run = (options) => runNativeDemo({ log: () => {}, onEvent: (event) => events.push(event), ...options });
+  /**
+   * 使用共享事件容器运行一轮原生演示，便于断言连续追问的上下文行为。
+   * @param {object} options 当前问题及可选历史。
+   * @returns {Promise<string>} 原生演示的最终回答。
+   */
+  const run = (options) => runNativeDemo({
+    /**
+     * 忽略控制台日志，由事件流或测试断言记录运行结果。
+     * @returns {void}
+     */
+    log: () => {},
+    /**
+     * 收集 Agent 领域事件，供后续协议或工具结果断言使用。
+     * @param {object} event 当前步骤的领域事件。
+     * @returns {number} 收集后的事件数量。
+     */
+    onEvent: (event) => events.push(event), ...options });
   assert.match(await run({ question: '帮我查订单' }), /请提供订单号/);
-  assert.equal(events.filter((e) => e.type === 'tool_call').length, 0);
+  assert.equal(events.filter(/** 识别tool_call事件。 */ (e) => e.type === 'tool_call').length, 0);
   const answer = await run({ question: '它多少钱', history: [{ role: 'user', content: '查 A1002' }] });
   assert.match(answer, /27,900/);
-  assert.equal(events.find((e) => e.type === 'tool_result').data.result.order.orderId, 'A1002');
+  assert.equal(events.find(/** 识别tool_result事件。 */ (e) => e.type === 'tool_result').data.result.order.orderId, 'A1002');
 });

@@ -14,5 +14,5 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   runOrderQuestionGraph({
     question: process.argv.slice(2).join(' ') || examples.defaultQuestion,
     baseURL: process.env.LLM_BASE_URL, model: process.env.LLM_MODEL, apiKey: process.env.LLM_API_KEY,
-  }).catch((error) => { console.error(error.message); process.exitCode = 1; });
+  }).catch(/** 输出简短运行错误并设置非零退出码。 */ (error) => { console.error(error.message); process.exitCode = 1; });
 }
