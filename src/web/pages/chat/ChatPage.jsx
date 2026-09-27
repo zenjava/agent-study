@@ -16,11 +16,30 @@ export function ChatPage() {
   const { mode, framework, agentId, session, config, orders, error, setError,
     changeFramework, changeMode, resetSession } = useChatSession();
   // 实现、模式或会话编号变化时，重新挂载内部会话状态。
-  return <CopilotKitProvider key={`${framework}-${mode}-${session}`} runtimeUrl="/api/copilotkit" agentId={agentId} enableInspector={false} onError={/** 将 Provider 报告的错误显示在当前页面。 */ ({ error: e }) => setError(e.message)}>
-    <CopilotChatConfigurationProvider agentId={agentId} labels={chatLabels}>
-      <ChatWorkspace agentId={agentId} framework={framework} onFramework={changeFramework}
-        mode={mode} config={config} orders={orders} error={error} setError={setError}
-        onMode={changeMode} onReset={resetSession} />
-    </CopilotChatConfigurationProvider>
-  </CopilotKitProvider>;
+  return (
+    <CopilotKitProvider
+      key={`${framework}-${mode}-${session}`}
+      runtimeUrl="/api/copilotkit"
+      agentId={agentId}
+      enableInspector={false}
+      onError={/** 将 Provider 报告的错误显示在当前页面。 */ ({ error: e }) => {
+        setError(e.message);
+      }}
+    >
+      <CopilotChatConfigurationProvider agentId={agentId} labels={chatLabels}>
+        <ChatWorkspace
+          agentId={agentId}
+          framework={framework}
+          onFramework={changeFramework}
+          mode={mode}
+          config={config}
+          orders={orders}
+          error={error}
+          setError={setError}
+          onMode={changeMode}
+          onReset={resetSession}
+        />
+      </CopilotChatConfigurationProvider>
+    </CopilotKitProvider>
+  );
 }

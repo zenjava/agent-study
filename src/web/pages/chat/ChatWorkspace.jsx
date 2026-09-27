@@ -31,7 +31,12 @@ export function ChatWorkspace(props) {
   const run = useChatRun(props);
   const { busy, isReady, setDraft } = run;
   // 前后端用同名 getOrder 关联工具与卡片；这是渲染注册，不在浏览器执行订单查询。
-  useRenderTool({ name: 'getOrder', agentId, parameters: z.object({ orderId: z.string() }), render: OrderCard }, [agentId]);
+  useRenderTool({
+    name: 'getOrder',
+    agentId,
+    parameters: z.object({ orderId: z.string() }),
+    render: OrderCard,
+  }, [agentId]);
   /**
    * 将示例问题填入草稿并聚焦输入框，等待用户主动发送。
    * @param {string} question 要填入的预设问题。

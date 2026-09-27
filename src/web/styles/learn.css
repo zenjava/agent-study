@@ -96,7 +96,7 @@ button { color: inherit; }
 /* 代码区支持长行和原始行号，保持源码阅读与页面排版分离。 */
 .code { margin: 0; padding: 17px 16px 19px 0; background: #1c2d26; color: #e5eadf; border-radius: 0 0 5px 5px; font-size: 13px; line-height: 1.85; tab-size: 2; max-height: 550px; overflow: auto; }
 .code-line { display: grid; grid-template-columns: 43px minmax(0, 1fr); min-height: 20px; }
-.code-line > span:last-child { white-space: pre-wrap; overflow-wrap: anywhere; }
+.code-line > span:last-child { white-space: pre; overflow-wrap: normal; }
 .line-number { color: #9aa99d; font-size: 9px; user-select: none; text-align: right; padding-right: 14px; }
 .syntax-string { color: #d2df9c; }
 .syntax-keyword { color: #edbc91; }

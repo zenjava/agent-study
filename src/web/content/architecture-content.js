@@ -56,14 +56,14 @@ export function getArchitectureSteps(framework) {
       summary: '页面配置 Runtime 地址与当前 agentId。',
       detail: 'CopilotKitProvider 在聊天页外层建立客户端上下文。切换实现或模式会重建 Provider，后续 useAgent 才能拿到与后端同名的 Agent。此步是提交前已有的页面连接。',
       handoff: '用户在 Composer 输入订单问题。',
-      sources: [source('Provider 与服务地址', 'src/web/pages/chat/ChatPage.jsx', 'return <CopilotKitProvider', '<CopilotChatConfigurationProvider agentId=')],
+      sources: [source('Provider 与服务地址', 'src/web/pages/chat/ChatPage.jsx', '<CopilotKitProvider', '<CopilotChatConfigurationProvider')],
     },
     {
       id: 'composer', lane: 'web', col: 1, row: 2, title: '用户提交问题', meta: 'Web / Composer',
       summary: '输入框把问题交给上层 send。',
       detail: '发送按钮或普通 Enter 调用 submit；组件只负责输入交互，不自行访问模型，也不读取模型 Key。示例路径从“查询 A1001”开始。',
       handoff: 'onSubmitMessage 将问题交给 useChatRun。',
-      sources: [source('输入框提交', 'src/web/components/chat/Composer.jsx', 'const submit =', 'return <div className="composer"')],
+      sources: [source('输入框提交', 'src/web/components/chat/Composer.jsx', 'const submit =', '  };')],
     },
     {
       id: 'client-agent', lane: 'web', col: 1, row: 3, title: '前端 Agent 发起运行', meta: 'Web / runAgent',
@@ -168,8 +168,8 @@ export function getArchitectureSteps(framework) {
       detail: 'useRenderTool 将 getOrder 结果绑定 OrderCard；助手文字走 Markdown 视图；TracePanel 展示请求、工具和供应商 usage。订单卡片读取工具 JSON，不从模型文字里猜字段。',
       handoff: '本轮完成；下一次追问会携带页面当前会话的部分历史。',
       sources: [
-        source('订单卡片注册', 'src/web/pages/chat/ChatWorkspace.jsx', 'useRenderTool({ name:', 'useRenderTool({ name:'),
-        source('助手文字与卡片', 'src/web/components/chat/AssistantMessage.jsx', 'export function AssistantMessage', '</section>}</CopilotChatAssistantMessage>;'),
+        source('订单卡片注册', 'src/web/pages/chat/ChatWorkspace.jsx', 'useRenderTool({', '}, [agentId]);'),
+        source('助手文字与卡片', 'src/web/components/chat/AssistantMessage.jsx', 'export function AssistantMessage', '</CopilotChatAssistantMessage>'),
         source('调用与用量面板', 'src/web/components/chat/TracePanel.jsx', 'export function requestUsages', 'return { ...event, usage: response?.data ?? null };'),
       ],
     },

@@ -19,6 +19,36 @@ export function Composer({ value = '', onChange, onSubmitMessage, onStop, isRunn
    * 在草稿非空且当前未运行时通知上层提交，保留原始输入供上层处理。
    * @returns {void}
    */
-  const submit = () => { if (value.trim() && !isRunning) onSubmitMessage?.(value); };
-  return <div className="composer"><textarea aria-label="输入订单问题" placeholder="问问订单进度、商品明细或物流…" value={value} maxLength={2000} rows={2} onChange={/** 将输入框当前文本传给上层草稿回调。 */ (e) => onChange?.(e.target.value)} onKeyDown={/** 仅在非组合输入且未按 Shift 时拦截 Enter 并提交问题。 */ (e) => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); submit(); } }} /><div className="composer-bottom"><span>↵ 发送 · Shift + Enter 换行</span>{isRunning ? <button className="send-button stop" aria-label="停止生成" onClick={onStop}>停止 ■</button> : <button className="send-button" aria-label="发送问题" disabled={!value.trim()} onClick={submit}>发送 ↑</button>}</div></div>;
+  const submit = () => {
+    if (value.trim() && !isRunning) {
+      onSubmitMessage?.(value);
+    }
+  };
+
+  return (
+    <div className="composer">
+      <textarea
+        aria-label="输入订单问题"
+        placeholder="问问订单进度、商品明细或物流…"
+        value={value}
+        maxLength={2000}
+        rows={2}
+        onChange={/** 将输入框当前文本传给上层草稿回调。 */ (e) => onChange?.(e.target.value)}
+        onKeyDown={/** 仅在非组合输入且未按 Shift 时拦截 Enter 并提交问题。 */ (e) => {
+          if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+            e.preventDefault();
+            submit();
+          }
+        }}
+      />
+      <div className="composer-bottom">
+        <span>↵ 发送 · Shift + Enter 换行</span>
+        {isRunning ? (
+          <button className="send-button stop" aria-label="停止生成" onClick={onStop}>停止 ■</button>
+        ) : (
+          <button className="send-button" aria-label="发送问题" disabled={!value.trim()} onClick={submit}>发送 ↑</button>
+        )}
+      </div>
+    </div>
+  );
 }

@@ -100,29 +100,161 @@ export function ArchitectureFlow() {
    * @param {number} index 目标节点序号。
    * @returns {void}
    */
-  function selectStep(index) { setActive(index); setHovered(null); setPlaying(false); }
+  function selectStep(index) {
+    setActive(index);
+    setHovered(null);
+    setPlaying(false);
+  }
 
   /**
    * 从当前节点继续，结束时从第一个节点重新播放。
    * @returns {void}
    */
   function togglePlayback() {
-    if (active === steps.length - 1) { setActive(0); setPlaying(true); return; }
+    if (active === steps.length - 1) {
+      setActive(0);
+      setPlaying(true);
+      return;
+    }
     setPlaying((value) => !value);
   }
 
-  return <section className="flow-tutorial" aria-label="Web 到 Agent 的完整架构流程图">
-    <div className="flow-toolbar"><div><span className="flow-kicker">ONE QUESTION / FULL STACK</span><h2>一张图，看完一次订单查询。</h2><p>图中演示真实模型查询 A1001 的典型成功路径。逐步播放连接线；将鼠标移到节点或点选节点，查看处理逻辑与真实源码。</p></div>
-      <div className="flow-mode"><span>切换 Agent 实现</span><div role="group" aria-label="Agent 实现">{modes.map(/** 渲染三种真实模型实现切换按钮。 */ ([id, label]) => <button key={id} aria-pressed={framework === id} onClick={/** 在同一流程中切换 Agent 的源码实现。 */ () => { setFramework(id); setActive(0); setPlaying(false); setHovered(null); }}>{label}</button>)}</div></div>
-    </div>
-    <div className="flow-playbar"><div><span className="flow-live-dot" data-playing={playing} /><strong>{String(active + 1).padStart(2, '0')} / {steps.length}</strong><span>当前：{steps[active].title}</span></div><div className="flow-controls"><button onClick={/** 返回上一节点并暂停播放。 */ () => selectStep(Math.max(0, active - 1))} disabled={active === 0}>← 上一步</button><button className="flow-play" onClick={togglePlayback}>{playing ? '暂停动画 Ⅱ' : active === steps.length - 1 ? '重新播放 ↺' : '继续播放 ▶'}</button><button onClick={/** 前往下一节点并暂停播放。 */ () => selectStep(Math.min(steps.length - 1, active + 1))} disabled={active === steps.length - 1}>下一步 →</button></div></div>
-    <div className="flow-study"><div className="flow-board-scroll"><div className="flow-board"><div className="flow-lanes">{lanes.map(/** 渲染 Web、服务端、Agent 与外部依赖四个泳道标题。 */ ([id, number, title, subtitle]) => <div key={id} data-lane={id}><small>{number} / LAYER</small><strong>{title}</strong><span>{subtitle}</span></div>)}</div>
-      <div className="flow-canvas" ref={boardRef} role="list" aria-label="一次订单查询的处理顺序">
-        <svg className="flow-connections" aria-hidden="true" width="100%" height="100%"><defs><marker id="flow-arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M 0 0 L 7 3.5 L 0 7" /></marker></defs>{paths.map(/** 用高亮和传输动画展示当前节点到下一节点的交接。 */ (path, index) => <path key={index} d={path} className={index < active ? 'visited' : index === active ? 'transmitting' : ''} markerEnd="url(#flow-arrow)" />)}</svg>
-        {steps.map(/** 渲染一个可悬停、可聚焦并可直接查看源码的处理节点。 */ (step, index) => <article key={step.id} className={`flow-node ${index === active ? 'active' : ''} ${index < active ? 'passed' : ''} ${index === inspected ? 'inspected' : ''}`} data-lane={step.lane} style={{ gridColumn: step.col, gridRow: step.row }} ref={/** 保存节点引用以计算 SVG 连线。 */ (node) => { nodeRefs.current[index] = node; }} role="listitem" onMouseEnter={/** 悬停时选中说明，移向代码栏后仍保留此节点。 */ () => setHovered(index)} onFocusCapture={/** 键盘进入节点时同步显示说明。 */ () => setHovered(index)}><button className="flow-node-main" onClick={/** 点选节点并暂停播放。 */ () => selectStep(index)} aria-label={`第 ${index + 1} 步：${step.title}，查看处理逻辑`}><small>{String(index + 1).padStart(2, '0')} <span>{step.meta}</span></small><strong>{step.title}</strong><span>{step.summary}</span></button><SourceLink source={step.sources[0]}>看源码</SourceLink></article>)}
-      </div></div></div>
-      <aside className="flow-detail" aria-label="所选节点的处理逻辑与关键代码"><div className="flow-detail-top"><span>STEP {String(inspected + 1).padStart(2, '0')} / {String(steps.length).padStart(2, '0')}</span><span>{detail.meta}</span></div><h3>{detail.title}</h3><p>{detail.detail}</p><div className="flow-handoff"><small>下一步怎样流转</small><strong>{detail.handoff}</strong></div><div className="flow-code-heading"><span>关键代码 · 当前仓库</span><SourceLink source={selectedSource}>跳转到源码</SourceLink></div>{detail.sources.length > 1 && <div className="flow-source-tabs" role="group" aria-label="选择关键代码">{detail.sources.map(/** 展示当前节点可切换的源码片段。 */ (item, index) => <button key={`${item.file}:${item.line}`} aria-pressed={sourceIndex === index} onClick={/** 查看当前用途对应的源码节选。 */ () => setSourceIndex(index)}>{item.label}</button>)}</div>}<div className="flow-source-file">{selectedSource.file}:L{selectedSource.line}</div><Code value={selectedSource.code} start={selectedSource.line} /></aside>
-    </div>
-    <div className="flow-footnotes"><p><b>分层边界</b> Web 在浏览器中运行；服务端和 Agent 是同一个 Node 进程里的不同代码职责；模型 API 在项目外，订单样本在项目内。</p><p><b>路径边界</b> 未配置 Key 时，OrderAgent 返回 RUN_ERROR；模型不调用工具时会跳过查单分支。本地演示模式使用固定规则或脚本模型。当前没有持久化会话或长期记忆。</p></div>
-  </section>;
+  return (
+    <section className="flow-tutorial" aria-label="Web 到 Agent 的完整架构流程图">
+      <div className="flow-toolbar">
+        <div>
+          <span className="flow-kicker">ONE QUESTION / FULL STACK</span>
+          <h2>一张图，看完一次订单查询。</h2>
+          <p>图中演示真实模型查询 A1001 的典型成功路径。逐步播放连接线；将鼠标移到节点或点选节点，查看处理逻辑与真实源码。</p>
+        </div>
+        <div className="flow-mode">
+          <span>切换 Agent 实现</span>
+          <div role="group" aria-label="Agent 实现">
+            {modes.map(/** 渲染三种真实模型实现切换按钮。 */ ([id, label]) => (
+              <button
+                key={id}
+                aria-pressed={framework === id}
+                onClick={/** 在同一流程中切换 Agent 的源码实现。 */ () => {
+                  setFramework(id);
+                  setActive(0);
+                  setPlaying(false);
+                  setHovered(null);
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="flow-playbar">
+        <div>
+          <span className="flow-live-dot" data-playing={playing} />
+          <strong>{String(active + 1).padStart(2, '0')} / {steps.length}</strong>
+          <span>当前：{steps[active].title}</span>
+        </div>
+        <div className="flow-controls">
+          <button onClick={/** 返回上一节点并暂停播放。 */ () => selectStep(Math.max(0, active - 1))} disabled={active === 0}>← 上一步</button>
+          <button className="flow-play" onClick={togglePlayback}>
+            {playing ? '暂停动画 Ⅱ' : active === steps.length - 1 ? '重新播放 ↺' : '继续播放 ▶'}
+          </button>
+          <button onClick={/** 前往下一节点并暂停播放。 */ () => selectStep(Math.min(steps.length - 1, active + 1))} disabled={active === steps.length - 1}>下一步 →</button>
+        </div>
+      </div>
+
+      <div className="flow-study">
+        <div className="flow-board-scroll">
+          <div className="flow-board">
+            <div className="flow-lanes">
+              {lanes.map(/** 渲染 Web、服务端、Agent 与外部依赖四个泳道标题。 */ ([id, number, title, subtitle]) => (
+                <div key={id} data-lane={id}>
+                  <small>{number} / LAYER</small>
+                  <strong>{title}</strong>
+                  <span>{subtitle}</span>
+                </div>
+              ))}
+            </div>
+            <div className="flow-canvas" ref={boardRef} role="list" aria-label="一次订单查询的处理顺序">
+              <svg className="flow-connections" aria-hidden="true" width="100%" height="100%">
+                <defs>
+                  <marker id="flow-arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+                    <path d="M 0 0 L 7 3.5 L 0 7" />
+                  </marker>
+                </defs>
+                {paths.map(/** 用高亮和传输动画展示当前节点到下一节点的交接。 */ (path, index) => (
+                  <path
+                    key={index}
+                    d={path}
+                    className={index < active ? 'visited' : index === active ? 'transmitting' : ''}
+                    markerEnd="url(#flow-arrow)"
+                  />
+                ))}
+              </svg>
+              {steps.map(/** 渲染一个可悬停、可聚焦并可直接查看源码的处理节点。 */ (step, index) => (
+                <article
+                  key={step.id}
+                  className={`flow-node ${index === active ? 'active' : ''} ${index < active ? 'passed' : ''} ${index === inspected ? 'inspected' : ''}`}
+                  data-lane={step.lane}
+                  style={{ gridColumn: step.col, gridRow: step.row }}
+                  ref={/** 保存节点引用以计算 SVG 连线。 */ (node) => { nodeRefs.current[index] = node; }}
+                  role="listitem"
+                  onMouseEnter={/** 悬停时选中说明，移向代码栏后仍保留此节点。 */ () => setHovered(index)}
+                  onFocusCapture={/** 键盘进入节点时同步显示说明。 */ () => setHovered(index)}
+                >
+                  <button
+                    className="flow-node-main"
+                    onClick={/** 点选节点并暂停播放。 */ () => selectStep(index)}
+                    aria-label={`第 ${index + 1} 步：${step.title}，查看处理逻辑`}
+                  >
+                    <small>{String(index + 1).padStart(2, '0')} <span>{step.meta}</span></small>
+                    <strong>{step.title}</strong>
+                    <span>{step.summary}</span>
+                  </button>
+                  <SourceLink source={step.sources[0]}>看源码</SourceLink>
+                </article>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <aside className="flow-detail" aria-label="所选节点的处理逻辑与关键代码">
+          <div className="flow-detail-top">
+            <span>STEP {String(inspected + 1).padStart(2, '0')} / {String(steps.length).padStart(2, '0')}</span>
+            <span>{detail.meta}</span>
+          </div>
+          <h3>{detail.title}</h3>
+          <p>{detail.detail}</p>
+          <div className="flow-handoff">
+            <small>下一步怎样流转</small>
+            <strong>{detail.handoff}</strong>
+          </div>
+          <div className="flow-code-heading">
+            <span>关键代码 · 当前仓库</span>
+            <SourceLink source={selectedSource}>跳转到源码</SourceLink>
+          </div>
+          {detail.sources.length > 1 && (
+            <div className="flow-source-tabs" role="group" aria-label="选择关键代码">
+              {detail.sources.map(/** 展示当前节点可切换的源码片段。 */ (item, index) => (
+                <button
+                  key={`${item.file}:${item.line}`}
+                  aria-pressed={sourceIndex === index}
+                  onClick={/** 查看当前用途对应的源码节选。 */ () => setSourceIndex(index)}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="flow-source-file">{selectedSource.file}:L{selectedSource.line}</div>
+          <Code value={selectedSource.code} start={selectedSource.line} />
+        </aside>
+      </div>
+
+      <div className="flow-footnotes">
+        <p><b>分层边界</b> Web 在浏览器中运行；服务端和 Agent 是同一个 Node 进程里的不同代码职责；模型 API 在项目外，订单样本在项目内。</p>
+        <p><b>路径边界</b> 未配置 Key 时，OrderAgent 返回 RUN_ERROR；模型不调用工具时会跳过查单分支。本地演示模式使用固定规则或脚本模型。当前没有持久化会话或长期记忆。</p>
+      </div>
+    </section>
+  );
 }

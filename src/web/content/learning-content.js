@@ -18,7 +18,7 @@ export const lessons = [
     snippets: [
       { label: '① 页面入口：runAgent', note: '订单输入框通过 onSubmitMessage={send} 调用这个函数。agent.addMessage 先加入用户问题，copilotkit.runAgent({ agent }) 再向后端发起本轮运行。这里的 runAgent 属于 CopilotKit。', ...excerpt('src/web/state/chat/useChatRun.js', 'async function send(question)', 'finally { submitLock') },
       { label: '② agent 从哪里来', note: 'useAgent 获取与 agentId 对应的前端 Agent 对象，保存消息与运行状态；useCopilotKit 获取负责发起运行的客户端。orders 对应真实模型，demo 对应本地演示。', ...excerpt('src/web/state/chat/useChatRun.js', 'const { agent, isReady } = useAgent', 'const { copilotkit } = useCopilotKit();') },
-      { label: '③ 连接哪个后端', note: 'CopilotKitProvider 的 runtimeUrl 指向 /api/copilotkit，agentId 指定使用哪个后端 Agent。前端发出的是对话消息，模型 Key 由后端配置。', ...excerpt('src/web/pages/chat/ChatPage.jsx', 'return <CopilotKitProvider', '<CopilotChatConfigurationProvider agentId=') },
+      { label: '③ 连接哪个后端', note: 'CopilotKitProvider 的 runtimeUrl 指向 /api/copilotkit，agentId 指定使用哪个后端 Agent。前端发出的是对话消息，模型 Key 由后端配置。', ...excerpt('src/web/pages/chat/ChatPage.jsx', '<CopilotKitProvider', '<CopilotChatConfigurationProvider') },
       { label: '④ 后端注册与分发', note: 'Copilot Runtime 将三种实现和两种本地演示映射到 src/server/order-agent.mjs 的 OrderAgent。它整理 question 和 history，orders 分支调用 src/agent/langchain/agent.mjs；orders_graph 分支调用新增的 src/agent/langgraph/agent.mjs。', ...excerpt('src/server/copilot-handler.mjs', 'const runtime =', 'return createCopilotRuntimeHandler') },
       { label: '⑤ LangChain：invoke', note: '进入 runOrderQuestion 后，才会创建 LangChain Agent 并调用 invoke。invoke 在 Node 后端编排模型与工具循环；它与页面上的 copilotkit.runAgent 是前后衔接的两个入口。', ...excerpt('src/agent/langchain/agent.mjs', 'const agent = createAgent', 'const content = result.messages.at(-1).content;') },
     ],
@@ -105,8 +105,8 @@ export const lessons = [
       ['文字是模型的总结', 'AssistantMessage 分别放置 toolCallsView 和 markdownRenderer。流式传输的是运行事件；当前模型配置 streaming: false，因此最终文字是拿到完整回答后一次推送，并非逐 Token 输出。'],
     ],
     snippets: [
-      { label: '工具绑定组件', ...excerpt('src/web/pages/chat/ChatWorkspace.jsx', 'useRenderTool({ name:', 'useRenderTool({ name:') },
-      { label: '两个展示出口', ...excerpt('src/web/components/chat/AssistantMessage.jsx', 'function AssistantMessage', '</section>}</CopilotChatAssistantMessage>;') },
+      { label: '工具绑定组件', ...excerpt('src/web/pages/chat/ChatWorkspace.jsx', 'useRenderTool({', '}, [agentId]);') },
+      { label: '两个展示出口', ...excerpt('src/web/components/chat/AssistantMessage.jsx', 'function AssistantMessage', '</CopilotChatAssistantMessage>') },
       { label: '卡片读取结果', ...excerpt('src/web/components/chat/OrderCard.jsx', 'export function OrderCard', 'const o = payload.order;') },
       { label: '事件协议转换', ...excerpt('src/server/order-agent.mjs', 'const callId =', "} else if (type === 'answer')") },
     ],

@@ -45,7 +45,7 @@ export const runtimeLessons = [
       ['标识各有用途', 'agentId 匹配 agents 对象的键；getOrder 是工具名称；tool_call_id 对应模型提出的一次调用。threadId 标识会话，runId 标识这次运行。它们不因名称相似而互相替代。'],
     ],
     snippets: [
-      { label: 'Provider 地址与 agentId', ...excerpt('src/web/pages/chat/ChatPage.jsx', 'return <CopilotKitProvider', '<CopilotChatConfigurationProvider agentId=') },
+      { label: 'Provider 地址与 agentId', ...excerpt('src/web/pages/chat/ChatPage.jsx', '<CopilotKitProvider', '<CopilotChatConfigurationProvider') },
       { label: '前端提交消息', ...excerpt('src/web/state/chat/useChatRun.js', 'async function send(question)', 'finally { submitLock') },
       { label: '注册 Runtime handler', ...excerpt('src/server/copilot-handler.mjs', 'const runtime =', 'return createCopilotRuntimeHandler') },
       { label: 'Node HTTP 转发', ...excerpt('src/server/http-server.mjs', 'const response = await handler(new Request', 'const reader = response.body?.getReader();') },
@@ -82,7 +82,7 @@ export const runtimeLessons = [
       ['实际验证范围', '离线测试验证 Runtime 分发、工具 ID、事件流与停止链路；脚本模型不能证明真实模型每次都会选中正确工具或给出正确业务结论。'],
     ],
     snippets: [
-      { label: '注册订单卡片', ...excerpt('src/web/pages/chat/ChatWorkspace.jsx', 'useRenderTool({ name:', 'useRenderTool({ name:') },
+      { label: '注册订单卡片', ...excerpt('src/web/pages/chat/ChatWorkspace.jsx', 'useRenderTool({', '}, [agentId]);') },
       { label: '工具结果与助手文字', ...excerpt('src/server/order-agent.mjs', "if (type === 'tool_call')", "send({ type: 'TEXT_MESSAGE_END'") },
       { label: '收集观察事件', ...excerpt('src/web/state/chat/useChatRun.js', 'onCustomEvent:', 'subscription.unsubscribe();') },
       { label: '关联用量与请求', ...excerpt('src/web/components/chat/TracePanel.jsx', 'export function requestUsages', 'return { ...event, usage: response?.data ?? null };') },
