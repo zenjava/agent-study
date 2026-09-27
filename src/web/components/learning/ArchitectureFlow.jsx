@@ -23,9 +23,10 @@ const modes = [
  * @param {DOMRect} to 下一节点的浏览器矩形。
  * @param {DOMRect} board 整张图的浏览器矩形。
  * @param {boolean} sameLane 两节点是否在同一泳道。
+ * @param {boolean} sameRow 两节点是否在同一行。
  * @returns {string} 以架构图左上角为原点的 SVG path。
  */
-function connectorPath(from, to, board, sameLane) {
+function connectorPath(from, to, board, sameLane, sameRow) {
   if (sameLane) {
     const x1 = from.left + from.width / 2 - board.left;
     const y1 = from.bottom - board.top;
@@ -36,9 +37,11 @@ function connectorPath(from, to, board, sameLane) {
   }
   const forward = to.left > from.left;
   const x1 = (forward ? from.right : from.left) - board.left;
-  const y1 = from.top + from.height / 2 - board.top;
+  // 同行箭头走中线；换行时从原卡片下方出发、从下一卡片上方进入，避开相邻箭头。
+  const portOffset = sameRow ? 0 : (to.top > from.top ? 18 : -18);
+  const y1 = from.top + from.height / 2 + portOffset - board.top;
   const x2 = (forward ? to.left : to.right) - board.left;
-  const y2 = to.top + to.height / 2 - board.top;
+  const y2 = to.top + to.height / 2 - portOffset - board.top;
   const mid = (x1 + x2) / 2;
   return `M ${x1} ${y1} C ${mid} ${y1}, ${mid} ${y2}, ${x2} ${y2}`;
 }
@@ -83,7 +86,13 @@ export function ArchitectureFlow() {
       const next = steps.slice(0, -1).map(/** 连接本节点与下一节点。 */ (step, index) => {
         const from = nodeRefs.current[index]?.getBoundingClientRect();
         const to = nodeRefs.current[index + 1]?.getBoundingClientRect();
-        return from && to ? connectorPath(from, to, rect, step.lane === steps[index + 1].lane) : '';
+        return from && to ? connectorPath(
+          from,
+          to,
+          rect,
+          step.lane === steps[index + 1].lane,
+          step.row === steps[index + 1].row,
+        ) : '';
       });
       setPaths(next);
     };
