@@ -31,7 +31,7 @@ async function collect(agent, request) {
 }
 
 test('AG-UI 保留每次请求用量，并按工具 ID 关联订单结果', /** 验证：AG-UI 保留每次请求用量，并按工具 ID 关联订单结果。 */ async () => {
-  const agent = createOrderAgent({}, {
+  const agent = createOrderAgent({ apiKey: 'offline-test-key' }, {
     /**
      * 校验问题与历史，并发出固定领域事件以验证 AG-UI 协议映射。
      * @param {object} options 问题、历史及 onEvent 回调。
@@ -107,7 +107,7 @@ test('模型失败转为 AG-UI 错误，消息中密钥被脱敏', /** 验证：
 
 test('Runtime 的 abortRun 立即中断正在进行的模型连接', /** 验证：Runtime 的 abortRun 立即中断正在进行的模型连接。 */ async () => {
   let signal;
-  const agent = createOrderAgent({}, {
+  const agent = createOrderAgent({ apiKey: 'offline-test-key' }, {
     /**
      * 保存运行取消信号并保持挂起，收到 abort 后拒绝以验证停止链路。
      * @param {object} options 包含 signal 的运行配置。

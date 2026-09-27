@@ -122,6 +122,11 @@ class OrderAgent extends AbstractAgent {
           const { question, history } = toConversation(input.messages);
           // CopilotChat 初次连接会启动空运行；它不应产生费用。
           if (question) {
+            // 真实模型配置在收到问题后由服务端判断，演示模式不需要 Key。
+            const key = this.config.apiKey;
+            if (!this.demo && (typeof key !== 'string' || !key.trim() || key.trim().startsWith('replace-with-'))) {
+              throw new Error('请先在本机 .env 中配置模型 Key，再重启服务。');
+            }
             trace({ type: 'start', data: { question } });
             const options = { ...this.config, question, history, onEvent,
               /**

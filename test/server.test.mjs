@@ -62,10 +62,11 @@ async function setup(t, status = 200) {
  * @param {string} url Harness 服务地址。
  * @param {object} input 测试输入。
  * @param {string} input.question 用户问题。
+ * @param {string} [input.agentId="orders"] Runtime 注册的 Agent 标识。
  * @param {Object<string, string>} [headers={}] 用于覆盖默认请求头的测试参数。
  * @returns {Promise<Response>} 运行接口返回的响应，成功时为 SSE 流。
  */
-const post = (url, { question }, headers = {}) => fetch(`${url}/api/copilotkit/agent/orders/run`, {
+const post = (url, { question, agentId = 'orders' }, headers = {}) => fetch(`${url}/api/copilotkit/agent/${agentId}/run`, {
   method: 'POST', headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream', ...headers },
   body: JSON.stringify({ threadId: 'test-thread', runId: 'test-run', state: {}, tools: [], context: [], forwardedProps: {}, messages: [{ id: 'u1', role: 'user', content: question }] }),
 });
@@ -97,7 +98,7 @@ test('页面通过后端串起真实函数与模拟模型，流式返回可观�
 test('只提供白名单静态文件和非秘密配置，不提供 .env 或源码', /** 验证：只提供白名单静态文件和非秘密配置，不提供 .env 或源码。 */ async (t) => {
   const { url } = await setup(t);
   const config = await (await fetch(`${url}/api/config`)).json();
-  assert.deepEqual(config, { model: 'deepseek-flash', keyConfigured: true });
+  assert.deepEqual(config, { model: 'deepseek-flash' });
   for (const path of ['/.env', '/.env.example', '/step2.mjs', '/.git/config', '/agent/langchain.mjs', '/server/http-server.mjs', '/src/agent/native/agent.mjs', '/src/server/http-server.mjs']) {
     assert.equal((await fetch(`${url}${path}`)).status, 404);
   }
@@ -142,6 +143,27 @@ test('模型失败产生可见错误事件，不伪造回答也不转发敏感�
   assert.equal(events.at(-1).type, 'RUN_ERROR');
   assert.match(events.at(-1).message, /HTTP 401/);
   assert.ok(!text.includes(fakeKey));
+});
+
+test('真实模型提交后由服务端校验 Key，缺失或占位符均返回可见错误，演示仍可运行', /** 验证：Key 校验只影响真实模型请求，不影响演示或空运行。 */ async (t) => {
+  for (const apiKey of [undefined, 'replace-with-your-deepseek-api-key']) {
+    const url = await listen(t, createHarnessServer({ baseURL: 'http://127.0.0.1:9', model: 'deepseek-flash', apiKey }));
+    assert.deepEqual(await (await fetch(`${url}/api/config`)).json(), { model: 'deepseek-flash' });
+    for (const agentId of ['orders', 'orders_graph', 'orders_native']) {
+      const response = await post(url, { agentId, question: 'A1001 谁在审批？' });
+      assert.equal(response.status, 200);
+      const events = readEvents(await response.text());
+      assert.equal(events[0].type, 'RUN_STARTED');
+      assert.equal(events.at(-1).type, 'RUN_ERROR');
+      assert.match(events.at(-1).message, /本机 \.env.*模型 Key/);
+      assert.equal(events.some(/** 确认缺少 Key 时不会产生模型请求事件。 */ (event) => event.type === 'CUSTOM' && event.value.type === 'request'), false);
+    }
+    const demo = readEvents(await (await post(url, { agentId: 'demo_native', question: '查 A1001' })).text());
+    assert.equal(demo.at(-1).type, 'RUN_FINISHED');
+    assert.ok(demo.some(/** 确认演示模式仍可得到真实订单查询结果。 */ (event) => event.type === 'TOOL_CALL_RESULT'));
+    const empty = readEvents(await (await post(url, { question: '' })).text());
+    assert.equal(empty.at(-1).type, 'RUN_FINISHED');
+  }
 });
 
 test('已删除的旧页面资源与运行接口返回 404，不调用模型', /** 验证：已删除的旧页面资源与运行接口返回 404，不调用模型。 */ async (t) => {

@@ -17,7 +17,7 @@ import { TracePanel } from './TracePanel.jsx';
  * @param {string} props.framework 当前 Agent 实现标识。
  * @param {function(string): void} props.onFramework 切换实现的回调。
  * @param {string} props.mode demo 或 live。
- * @param {object|null} props.config 公开模型配置，包含模型名和密钥是否已配置。
+ * @param {object|null} props.config 公开模型配置，仅包含模型名。
  * @param {Array<object>} props.orders 服务端提供的订单摘要。
  * @param {string} props.error 当前错误提示。
  * @param {function(string): void} props.setError 更新错误提示的函数。

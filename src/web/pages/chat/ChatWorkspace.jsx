@@ -18,7 +18,7 @@ import { useChatRun } from '../../state/chat/useChatRun.js';
  * @param {string} props.framework 当前 Agent 实现标识。
  * @param {string} props.mode demo 或 live。
  * @param {Array<object>} props.orders 服务端提供的订单摘要。
- * @param {object|null} props.config 公开模型配置，包含模型名和密钥是否已配置。
+ * @param {object|null} props.config 公开模型配置，仅包含模型名。
  * @param {function(string): void} props.setError 更新错误提示的函数。
  * @param {function(): void} props.onReset 开启新对话的回调。
  * @param {function(string): void} props.onFramework 切换实现的回调。

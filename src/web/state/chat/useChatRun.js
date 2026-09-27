@@ -9,12 +9,10 @@ import { useAgent, useCopilotKit } from '@copilotkit/react-core/v2';
  * 连接当前前端 Agent，管理草稿、执行事件、同步提交锁及停止操作。
  * @param {object} options 当前会话配置。
  * @param {string} options.agentId Runtime 中注册的 Agent 标识。
- * @param {string} options.mode demo 或 live。
- * @param {object|null} options.config 公开配置，包含 keyConfigured。
  * @param {function(string): void} options.setError 页面错误状态更新函数。
  * @returns {object} Agent、就绪状态、草稿、事件、忙碌状态以及 send、stop 操作。
  */
-export function useChatRun({ agentId, mode, config, setError }) {
+export function useChatRun({ agentId, setError }) {
   const { agent, isReady } = useAgent({ agentId });
   const { copilotkit } = useCopilotKit();
   const [draft, setDraft] = useState('');
@@ -45,7 +43,6 @@ export function useChatRun({ agentId, mode, config, setError }) {
    */
   async function send(question) {
     if (!question.trim() || !isReady || submitLock.current || agent.isRunning) return;
-    if (mode === 'live' && !config?.keyConfigured) { setError('请先在本机 .env 中配置模型 Key，再重启服务。'); return; }
     submitLock.current = true; setSubmitting(true); setError(''); setDraft('');
     agent.addMessage({ id: crypto.randomUUID(), role: 'user', content: question.trim() });
     try { await copilotkit.runAgent({ agent }); }

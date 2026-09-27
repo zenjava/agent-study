@@ -106,12 +106,9 @@ export function createHarnessServer(config) {
         return json(404, { error: '未找到。' });
       }
     }
-    // 仅返回显示所需的模型名与是否配置 Key，不把密钥内容发送到浏览器。
+    // 仅返回显示所需的模型名；密钥及其配置状态都留在服务端。
     if (req.method === 'GET' && path === '/api/config') {
-      return json(200, {
-        model: config.model || '未配置模型',
-        keyConfigured: Boolean(config.apiKey?.trim()) && !config.apiKey.trim().startsWith('replace-with-'),
-      });
+      return json(200, { model: config.model || '未配置模型' });
     }
     return json(404, { error: '未找到。' });
   });
