@@ -1,47 +1,20 @@
-# LangChain.js 迁移记录
+# LangChain.js 版本说明
 
-迁移前基线：`1b2fb28`（原生模型工具调用循环，40 项测试通过）。
+当前实现位于 `src/agent/langchain/agent.mjs`。它使用 LangChain 的 `ChatOpenAI`、`ChatPromptTemplate`、`MessagesPlaceholder`、`tool`、`ToolMessage` 和 Runnable `pipe`，不调用 `createAgent` 或 `@langchain/langgraph`。这里比较的是两种可切换的**编排架构**：LangChain 组件加本地循环，与 LangGraph 的显式状态图。两者共用模型配置、订单工具、HTTP 观察层和 Web 协议。
 
-## 目标与分工
+## 一轮查单如何运行
 
-将手写的模型/工具循环替换为 LangChain.js `createAgent`。
-目录整理后，该实现位于 `src/agent/langchain/agent.mjs`；HTTP 和 AG-UI 接入位于 `src/server/`。
-`ChatOpenAI` 连接现有 OpenAI 兼容接口；`tool` 和 Zod 定义订单查询；中间件保留调用边界与教学事件。
-订单数据、系统提示词、CopilotKit 卡片和 AG-UI 协议保持现有业务语义。
+1. `prompt.pipe(chatModel.bindTools([orderTool]))` 组成一次模型调用链。`bindTools` 将工具定义提供给模型，并不执行工具。
+2. `chain.invoke({ messages })` 发送一次模型请求，返回 `AIMessage`。
+3. 本地循环读取模型的 `tool_calls`，校验工具名称和 Zod 参数；合法时调用 `orderTool.invoke(call)`，非法时返回带相同调用 ID 的错误 `ToolMessage`。
+4. 将模型消息和工具结果加入 `messages`，下一次 `chain.invoke` 让模型读取结果。没有新工具请求时返回最终文字。
 
-## 执行步骤
+`maxSteps` 限制模型请求次数；最后一次响应仍要求调用工具时停止，避免执行无法回传的查询。`model-transport.mjs` 记录实际 HTTP 请求、原始 usage、响应、超时与取消。服务端只在收到真实提问后检查模型 Key。当前没有持久化会话、长期记忆或逐 Token 模型输出。
 
-- [x] 提交迁移前代码，检查密钥忽略规则，运行全部基线测试。
-- [x] 锁定 LangChain、Core、OpenAI 适配器依赖版本。
-- [x] 补充连续追问、模型原始响应展示、失败不重试、取消和循环边界的回归测试；先确认新增行为测试失败。
-- [x] 用 `createAgent` / `tool` 替换手写循环；通过中间件处理工具错误和调用上限。
-- [x] 保留真实 HTTP 请求与原始 usage 的脱敏快照，新增模型响应事件，让完整调用链可检查。
-- [x] 更新 README 的阅读顺序、运行方式、前后职责对照。
-- [x] 运行全部测试和构建，用本机模拟模型验证页面实际链路。
-- [x] 检查 Git 差异，把迁移改动保留为相对基线的未提交变更。
+## 与另两版的边界
 
-## 验收边界
+- 原生 JavaScript 版自己构造 HTTP 请求体和普通消息对象，也自己执行工具循环。
+- LangChain 版通过模型适配器、Prompt、Runnable、Tool 和消息类处理协议与工具对象；循环由本地代码控制。
+- LangGraph 版使用 `StateGraph`、`MessagesValue` reducer、模型/工具节点和条件边控制循环。
 
-自动化与页面模拟使用本机 HTTP 服务和假密钥。它们验证 LangChain、真实 getOrder、协议、错误处理和渲染，不代表外部模型的分析正确性。
-不改动 `.env`。外部调用和本地模拟的证据分别记录。
-
-## 查看前后变化
-
-```bash
-git show 1b2fb28:step2.mjs
-git diff 1b2fb28 -- src/agent src/server src/web README.md package.json
-```
-
-
-## 验证结果（2026-09-27）
-
-- 迁移前：40 项测试通过，提交 `1b2fb28`。
-- 迁移后：44 项测试通过；新增的原始响应展示测试先失败、迁移后通过。
-- `npm run build` 成功；`git diff --check` 无格式错误。
-- 浏览器使用独立 localhost 模拟模型，实际经过 CopilotKit → AG-UI → LangChain → ChatOpenAI → getOrder。
-- 查 A1001：2 次模型请求、1 次工具执行；两次模拟 usage 为 135 / 205，页面合计 340；卡片金额 48600 元。
-- 两条「模型原始响应」可展开为 JSON，包含 `tool_calls`、调用 ID 和 `finish_reason`；浏览器无控制台错误或警告。
-- 原地址 127.0.0.1:3210 已重启加载新实现，`.env` 未修改；此次未请求外部模型。
-
-框架兼容处理：工具结果增加 SDK 生成的 `name` 字段；错误参数由中间件回传结构化错误。
-非法 JSON 的故障注入测试会触发 LangChain Core 自身的工具调用兼容警告，该用例仍成功回传错误并继续纠正；正常调用与浏览器验证没有该警告。
+三版共用 `test/order-agent-contract.mjs`，验证请求、工具结果、参数纠错、调用 ID、上限、错误、历史与用量。`npm test` 和 `npm run build` 验证代码与构建；模拟模型测试不代表外部模型的回答质量。

@@ -4,7 +4,7 @@
  */
 export const implementations = {
   native: { label: '原生 JavaScript', agentId: 'orders_native', course: '/learn/native', detail: 'fetch + messages · 手写循环' },
-  langchain: { label: 'LangChain', agentId: 'orders', course: '/learn', detail: 'createAgent · 自动编排循环' },
+  langchain: { label: 'LangChain', agentId: 'orders', course: '/learn', detail: 'Runnable · 本地工具循环' },
   langgraph: { label: 'LangGraph', agentId: 'orders_graph', course: '/learn/langgraph', detail: 'StateGraph · 显式节点与边' },
 };
 

@@ -7,7 +7,7 @@ const routes = [
   ['/learn/architecture', '全栈架构', 'Web → Agent'],
   ['/learn/runtime', 'Copilot Runtime', '共用接入层'],
   ['/learn/native', '原生 JavaScript', 'fetch + messages'],
-  ['/learn', 'LangChain', 'createAgent'],
+  ['/learn', 'LangChain', 'Runnable + Tool'],
   ['/learn/langgraph', 'LangGraph', 'StateGraph'],
 ];
 

@@ -27,11 +27,11 @@ const implementations = {
   },
   langchain: {
     name: 'LangChain', agentId: 'orders',
-    runner: source('createAgent 与 invoke', 'src/agent/langchain/agent.mjs', 'const agent = createAgent', 'const content = result.messages.at(-1).content;'),
-    tool: source('中间件校验工具', 'src/agent/langchain/agent.mjs', 'wrapToolCall: async', 'const result = JSON.parse(message.content);'),
-    toolReturn: source('ToolMessage 与事件', 'src/agent/langchain/agent.mjs', "emit('tool_result', step", 'return message;'),
-    answer: source('取出最终回答', 'src/agent/langchain/agent.mjs', "emit('answer', transport.step", 'return content;'),
-    note: 'createAgent 管理工具循环；中间件负责校验、限次与观察事件。',
+    runner: source('Runnable 组装与调用', 'src/agent/langchain/agent.mjs', 'const prompt =', 'const messages ='),
+    tool: source('本地校验工具', 'src/agent/langchain/agent.mjs', 'for (const [index, raw]', 'const result = JSON.parse(message.content);'),
+    toolReturn: source('ToolMessage 与事件', 'src/agent/langchain/agent.mjs', "emit('tool_result', step", 'messages.push(message);'),
+    answer: source('取出最终回答', 'src/agent/langchain/agent.mjs', "emit('answer', step", 'return content;'),
+    note: 'Prompt 与模型组成 Runnable；本地循环校验、执行工具并回填 ToolMessage。',
   },
   langgraph: {
     name: 'LangGraph', agentId: 'orders_graph',
@@ -120,7 +120,7 @@ export function getArchitectureSteps(framework) {
     {
       id: 'tool-boundary', lane: 'agent', col: 3, row: 7, title: '工具执行边界', meta: 'Agent / getOrder',
       summary: '校验名称和参数，再执行工具。',
-      detail: '模型只提出工具调用意图。原生版手写白名单与参数校验；LangChain 用 wrapToolCall；LangGraph 在 toolsNode 中校验。未知工具或坏参数返回结构化错误，不会放任模型执行任意函数。',
+      detail: '模型只提出工具调用意图。原生版手写白名单与参数校验；LangChain 在本地循环中校验；LangGraph 在 toolsNode 中校验。未知工具或坏参数返回结构化错误，不会放任模型执行任意函数。',
       handoff: '合法的 orderId 进入共享 getOrder 业务函数。',
       sources: [selected.tool],
     },
@@ -148,7 +148,7 @@ export function getArchitectureSteps(framework) {
     {
       id: 'agent-answer', lane: 'agent', col: 3, row: 9, title: 'Agent 确认最终答案', meta: 'Agent / answer',
       summary: '提取回答并发出 answer 领域事件。',
-      detail: 'Agent 验证最终文字非空，再产生 answer 事件。LangGraph 从 graph.invoke 的 messages 读取；LangChain 从 agent.invoke 读取；原生版从模型响应读取。',
+      detail: 'Agent 验证最终文字非空，再产生 answer 事件。LangGraph 从 graph.invoke 的 messages 读取；LangChain 从 Runnable 返回的 AIMessage 读取；原生版从模型响应读取。',
       handoff: 'answer 与工具事件交给 OrderAgent 转换成 AG-UI。',
       sources: [selected.answer],
     },

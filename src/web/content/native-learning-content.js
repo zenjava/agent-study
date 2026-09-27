@@ -92,17 +92,17 @@ export const nativeLessons = [
   },
   {
     id: 'native-compare', name: '对照三种实现', subtitle: '同一业务，不同编排', minutes: '4 min',
-    title: '看懂手写循环，再看框架接管了什么。',
+    title: '看懂手写循环，再比较框架组件和状态图。',
     intro: '三个版本共用订单数据、业务规则、事件语义与界面。比较的是编排方式，不是三个不同的大模型。',
-    takeaway: '原生版显式写循环；LangChain 托管循环；LangGraph 显式写状态与节点。',
+    takeaway: '原生版用原生 HTTP 写循环；LangChain 用 Runnable 和 Tool 写循环；LangGraph 用状态、节点与边编排。',
     points: [
       ['原生 JavaScript', 'fetch 负责请求，messages.push 保存调用与结果，for 和 if 决定继续或结束。适合从头理解工具调用协议。'],
-      ['LangChain', 'createAgent 与中间件负责模型和工具循环。业务代码聚焦工具与约束，框架负责追加 ToolMessage 和继续调用。'],
+      ['LangChain', 'Prompt 与模型组成 Runnable；本地循环执行工具、追加 ToolMessage 并决定是否继续。'],
       ['LangGraph', 'StateGraph 显式表达 model、tools 和条件边。状态由 reducer 合并，编排结构适合扩展为更多节点。当前未配置持久化和人工恢复。'],
     ],
     snippets: [
       { label: '原生 for', ...excerpt('src/agent/native/agent.mjs', 'for (let step', 'const calls = message.tool_calls ?? [];') },
-      { label: 'LangChain createAgent', ...excerpt('src/agent/langchain/agent.mjs', 'const agent = createAgent', 'const content = result.messages.at(-1).content;') },
+      { label: 'LangChain Runnable', ...excerpt('src/agent/langchain/agent.mjs', 'const prompt =', 'const messages =') },
       { label: 'LangGraph StateGraph', ...excerpt('src/agent/langgraph/agent.mjs', 'const graph = new StateGraph', '.compile();') },
     ],
     quiz: { question: '切换编排实现后，订单卡片为什么可以继续复用？', options: ['三种模型总会生成相同 Markdown', '后端统一输出 AG-UI 工具结果，卡片依据 getOrder 的数据渲染', '浏览器会重新执行订单函数'], answer: 1, explanation: '共享工具数据契约和服务端协议适配，让同一界面接入三种实现。' },

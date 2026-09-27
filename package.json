@@ -16,7 +16,6 @@
     "@langchain/core": "1.2.12",
     "@langchain/langgraph": "1.4.18",
     "@langchain/openai": "1.5.13",
-    "langchain": "1.5.12",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "rxjs": "7.8.1",

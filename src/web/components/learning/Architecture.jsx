@@ -10,7 +10,7 @@ import React from 'react';
 export function Architecture() {
   const roles = [
     ['01', 'CopilotKit', '接收问题 · 展示界面', 'React / AG-UI'],
-    ['02', 'LangChain', '组织消息 · 调度工具', 'Node / createAgent'],
+    ['02', 'LangChain', '组织消息 · 调度工具', 'Node / Runnable'],
     ['03', '大语言模型', '选择工具 · 组织回答', '外部模型 API'],
     ['04', '业务函数', '读取订单 · 返回事实', 'Node / getOrder'],
   ];

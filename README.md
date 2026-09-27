@@ -26,7 +26,7 @@ harness/
 │       │   └── demo/
 │       │       └── model.demo.mjs # 脚本模型驱动的原生循环演示
 │       ├── langchain/
-│       │   └── agent.mjs       # createAgent 编排
+│       │   └── agent.mjs       # Runnable + 本地工具循环
 │       ├── langgraph/
 │       │   └── agent.mjs       # StateGraph 编排
 │       └── common/
@@ -86,11 +86,11 @@ Web 分层与修改入口见 [Web 目录说明](docs/web-structure.md)。入口�
 
 # 第二步：让模型提出工具调用请求
 
-模型与工具循环由 `src/agent/langchain/agent.mjs` 中的 LangChain.js `createAgent` 管理，`ChatOpenAI` 连接兼容接口；`src/agent/langgraph/agent.mjs` 则以显式图编排同一业务函数。使用 Node.js 22 或更高版本，并先运行 `npm ci --ignore-scripts` 安装锁定依赖。
+`src/agent/langchain/agent.mjs` 使用 LangChain 的 Prompt、Runnable、模型消息和工具组件，在本地循环中执行工具；`src/agent/langgraph/agent.mjs` 使用显式 StateGraph 编排同一业务函数。两版共用模型配置与业务接口，编排实现可切换。使用 Node.js 22 或更高版本，并先运行 `npm ci --ignore-scripts` 安装锁定依赖。
 
 ```text
 src/agent/native/agent.mjs          原生模型与工具循环
-src/agent/langchain/agent.mjs       LangChain createAgent 编排
+src/agent/langchain/agent.mjs       LangChain Runnable + 本地工具循环
 src/agent/langgraph/agent.mjs       LangGraph StateGraph 编排
 src/agent/common/order-contract.mjs 框架工具 Schema 与注册
 src/agent/common/tools/get-order.mjs 三版共用的订单查询函数
@@ -160,7 +160,7 @@ DeepSeek 当前默认开启思考模式。本例对 `deepseek-` 开头的模型�
 }
 ```
 
-注意，`arguments` 是 JSON **字符串**。此时订单还没有被查询。LangChain 将参数转换成工具调用对象；我们的中间件确认工具名只能是 `getOrder`，Zod Schema 要求参数只能包含非空字符串 `orderId`，通过后由 LangChain 调用注册的工具函数：
+注意，`arguments` 是 JSON **字符串**。此时订单还没有被查询。后端保留原始参数并整理成 LangChain 工具调用对象；本地执行分支确认工具名只能是 `getOrder`，Zod Schema 要求参数只能包含非空字符串 `orderId`，通过后调用注册的工具函数：
 
 ```js
 const orderTool = tool(({ orderId }) => JSON.stringify(getOrder({ orderId })), {
@@ -201,7 +201,7 @@ const orderTool = tool(({ orderId }) => JSON.stringify(getOrder({ orderId })), {
 node --test test/langchain.test.mjs
 ```
 
-测试只启动监听 `127.0.0.1` 随机端口的模拟 HTTP 服务，使用固定假密钥，不需要 `.env`，不连接真实模型。它执行真实的 LangChain Agent、ChatOpenAI HTTP 请求、参数校验、`getOrder` 和结果回传，检查发送给 HTTP 对端的消息及调用 ID。
+测试只启动监听 `127.0.0.1` 随机端口的模拟 HTTP 服务，使用固定假密钥，不需要 `.env`，不连接真实模型。它执行真实的 LangChain Runnable 与本地循环、ChatOpenAI HTTP 请求、参数校验、`getOrder` 和结果回传，检查发送给 HTTP 对端的消息及调用 ID。
 
 **模拟服务的工具请求和最终回答是预先写好的。** 测试证明程序能走通协议和错误处理，不能证明真实模型会正确选择工具或正确回答。DeepSeek 专项用例检查 `/chat/completions` 路径、`deepseek-flash` 模型名、每次请求关闭思考模式，以及真实查询结果按调用 ID 回传。本机填好有效密钥后，通过下面的页面测试真实链路。
 
@@ -227,7 +227,7 @@ npm start
 - LangGraph 教学图可逐步查看状态消息、分支和两类调用计数；它是固定脚本，工作台的真实执行记录则由后端图节点产生。
 - 请求实验室提供查到订单、订单不存在、缺少订单号三种固定脚本，可逐步查看消息与调用计数；不请求模型、不消耗 API Token。
 - LangChain 第一节保留 Web 到 Agent 的简要入口，完整的 Provider、前端代理、Runtime、后端 Agent、AG-UI、路由与 ID 映射集中在独立 Runtime 教程。
-- LangChain 核心概念章节提供 Model、Message、Tool、Prompt、Agent、Middleware、State、Runnable 和结构化输出九张概念卡，区分运行入口，并解释记忆、LangGraph / LangSmith、RAG 的适用位置；附官方文档和真实源码，标注当前已使用与尚未接入的能力。
+- LangChain 核心概念章节提供 Model、Message、Tool、Prompt、Agent、执行边界、State、Runnable 和结构化输出九张概念卡，区分运行入口，并解释记忆、LangGraph / LangSmith、RAG 的适用位置；附官方文档和真实源码，标注当前已使用与尚未接入的能力。
 - 代码片段来自构建时明确列出的仓库源码，显示实际行号；不导入 `.env`。修改被引用的源码后需重新 `npm run build`。
 - 每节小测答对后保存本浏览器的学习进度，可随时跳转章节。学习进度与订单对话独立。
 
@@ -241,7 +241,7 @@ npm start
 | --- | --- | --- |
 | 原生 JavaScript + 真实模型 | `orders_native` | `src/agent/native/agent.mjs` 的手写循环 |
 | 原生 JavaScript + 本地演示 | `demo_native` | 执行原生循环，脚本模拟模型响应 |
-| LangChain + 真实模型 | `orders` | `src/agent/langchain/agent.mjs` 的 `runOrderQuestion` / `createAgent` |
+| LangChain + 真实模型 | `orders` | `src/agent/langchain/agent.mjs` 的 `runOrderQuestion` / Runnable |
 | LangGraph + 真实模型 | `orders_graph` | `src/agent/langgraph/agent.mjs` 的 `runOrderQuestionGraph` / `StateGraph` |
 | LangChain / LangGraph + 本地演示 | `demo` | 共用固定规则，查询真实的本地虚构数据，不运行模型编排 |
 
@@ -277,7 +277,7 @@ CopilotKit 对话 / useRenderTool
   → /api/copilotkit（自托管 Copilot Runtime）
   → OrderAgent（AG-UI 与教学事件之间的适配）
   → orders_native: runOrderQuestionNative → 原生 fetch + for
-  或 orders: runOrderQuestion → LangChain createAgent
+  或 orders: runOrderQuestion → LangChain Runnable + 本地循环
   或 orders_graph: runOrderQuestionGraph → LangGraph StateGraph
   → getOrder（完整示例订单）
   → AG-UI 工具结果 / 文字 / 自定义 usage 事件
@@ -302,7 +302,7 @@ src/agent/common/demo/rules.demo.mjs        框架版固定规则演示
 src/server/order-agent.mjs      AG-UI 适配、多轮上下文与取消
 src/server/copilot-handler.mjs  自托管 Runtime，关闭框架遥测
 src/agent/common/order-contract.mjs   LangChain / LangGraph 的工具适配与 Zod Schema
-src/agent/langchain/agent.mjs      LangChain 模型配置、限制与事件中间件
+src/agent/langchain/agent.mjs      LangChain Prompt、Runnable 与本地工具循环
 src/agent/langgraph/agent.mjs      LangGraph 状态、节点、条件边与图执行
 src/agent/common/model-transport.mjs  HTTP 观察、原始用量、协议校验与请求超时
 src/server/http-server.mjs   本机 HTTP、静态文件、配置与 Runtime 路由
@@ -327,28 +327,33 @@ npm run build
 | --- | --- | --- |
 | 工具定义 | 手写 `tools` JSON Schema | `tool` + Zod Schema |
 | 调用模型 | 手写 HTTP 请求体 | `ChatOpenAI` 生成协议并调用兼容接口 |
-| 执行、回传、继续调用 | `for` + `executeTool` + `messages.push` | `createAgent` + `agent.invoke` |
+| 执行、回传、继续调用 | `for` + `executeTool` + `messages.push` | `chain.invoke` + `orderTool.invoke` + `messages.push` |
 | 业务查询 | `getOrder` | 同一个 `getOrder` |
-| 调用上限与业务错误 | 循环中的判断 | `createMiddleware` 拦截模型/工具调用 |
-| 教学过程和 Token | 原生 fetch 产生事件 | `model-transport` 观察 SDK 实际 HTTP；中间件产生工具事件 |
+| 调用上限与业务错误 | 循环中的判断 | 本地循环限制次数并校验工具参数 |
+| 教学过程和 Token | 原生 fetch 产生事件 | `model-transport` 观察 SDK 实际 HTTP；本地循环产生工具事件 |
 | 页面展示 | CopilotKit + 订单卡片 | 保留卡片，增加模型原始响应记录 |
 
 核心调用相当于：
 
 ```js
-const agent = createAgent({
-  model: chatModel,
-  tools: [orderTool],
-  systemPrompt,
-  middleware: [middleware],
-});
-const result = await agent.invoke({ messages: [...history, { role: 'user', content: question }] });
+const prompt = ChatPromptTemplate.fromMessages([
+  ['system', systemPrompt],
+  new MessagesPlaceholder('messages'),
+]);
+const chain = prompt.pipe(chatModel.bindTools([orderTool]));
+const messages = [...history, { role: 'user', content: question }];
+for (let step = 1; step <= maxSteps; step += 1) {
+  const response = await chain.invoke({ messages });
+  messages.push(response);
+  if (!response.tool_calls.length) return response.content;
+  // 校验工具调用、执行 orderTool，再追加 ToolMessage。
+}
 ```
 
-运行时未配置持久化会话；每轮问题创建独立 Agent，沿用页面传入且经过服务端筛选的文字历史。
+运行时未配置持久化会话；每轮问题创建独立的 Runnable 与消息数组，沿用页面传入且经过服务端筛选的文字历史。
 LangChain 与模型 SDK 的自动重试均关闭，每个显示的请求对应一次 HTTP 尝试。
 保留 HTTP 观察层是为了准确展示原始请求、供应商 usage（包括缺失值和缓存细节）以及读取响应体的超时；它不负责工具执行或循环。
-对于无法解析的工具参数，中间件保留原始响应供页面查看，并以同一调用 ID 返回 `INVALID_ARGUMENTS`，让模型在剩余次数内纠正。
+对于无法解析的工具参数，本地工具分支保留原始响应供页面查看，并以同一调用 ID 返回 `INVALID_ARGUMENTS`，让模型在剩余次数内纠正。
 
 实现细节与验证记录见 `docs/langchain-migration.md`。
-参考：[LangChain.js Agents](https://docs.langchain.com/oss/javascript/langchain/agents)、[自定义中间件](https://docs.langchain.com/oss/javascript/langchain/middleware/custom)。
+参考：[LangChain 模型](https://docs.langchain.com/oss/javascript/langchain/models)、[LangChain 工具](https://docs.langchain.com/oss/javascript/langchain/tools)、[LangGraph 状态图](https://docs.langchain.com/oss/javascript/langgraph/graph-api)。

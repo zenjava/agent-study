@@ -1,6 +1,6 @@
 # 并存的 LangGraph 学习版本
 
-LangChain 实现在 `src/agent/langchain/agent.mjs`，LangGraph 实现在 `src/agent/langgraph/agent.mjs`。比较对象是 `createAgent` 高层 API 与显式 `StateGraph`；LangChain Agent 本身也基于 LangGraph。
+LangChain 实现在 `src/agent/langchain/agent.mjs`，使用 Prompt、Runnable、Tool 和本地循环；LangGraph 实现在 `src/agent/langgraph/agent.mjs`，使用显式 `StateGraph`、状态和条件边。两套编排可以在同一业务接口下切换，模型配置与订单工具共用。
 
 ## 运行链路
 
