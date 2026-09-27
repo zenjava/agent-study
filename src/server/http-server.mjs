@@ -19,7 +19,7 @@ export function createHarnessServer(config) {
   // 多条教程 URL 共用一个 HTML 壳，浏览器入口再根据 pathname 选择课程。
   const pages = new Map([
     ['/', 'index.html'], ['/learn', 'learn.html'], ['/learn.html', 'learn.html'],
-    ['/learn/langchain', 'learn.html'], ['/learn/langgraph', 'learn.html'], ['/learn/native', 'learn.html'],
+    ['/learn/langchain', 'learn.html'], ['/learn/langgraph', 'learn.html'], ['/learn/native', 'learn.html'], ['/learn/runtime', 'learn.html'],
   ]);
   let copilotHandler;
   const server = createServer(/** 处理本机 HTTP 请求，分发页面、公开数据和 CopilotKit 接口，并转发响应流。 */ async (req, res) => {

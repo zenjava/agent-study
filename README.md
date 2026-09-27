@@ -14,7 +14,7 @@ harness/
 │   │   │   └── demo/          # 页面演示场景、提示词与预览数据
 │   │   ├── styles/            # 聊天、教程样式与设计变量
 │   │   ├── index.html         # 工作台 HTML 壳
-│   │   └── learn.html         # 三版教程共用的 HTML 壳
+│   │   └── learn.html         # 三种实现与 Runtime 教程共用的 HTML 壳
 │   ├── server/
 │   │   ├── main.mjs            # HTTP 服务启动入口
 │   │   ├── http-server.mjs     # 路由、静态资源与响应流
@@ -87,7 +87,7 @@ Web 分层与修改入口见 [Web 目录说明](docs/web-structure.md)。入口�
 - **真实模型**走 `orders_native`，使用 `.env`，通过原生 fetch 调用兼容 Chat Completions 接口。
 - **CLI Demo**可独立运行 `npm run demo:native`，不依赖 Web 服务和 node_modules。
 
-教程包含六节：实现边界、messages 与工具说明、完整循环、工具执行与回传、执行限制、三版对照。循环演示支持查到订单、订单不存在、缺少订单号和多个订单，展示当前代码实际产生的事件快照。学习进度与其余两版分开保存。
+教程包含六节：实现边界、messages 与工具说明、完整循环、工具执行与回传、执行限制、三版对照。循环演示支持查到订单、订单不存在、缺少订单号和多个订单，展示当前代码实际产生的事件快照。学习进度与其他实现课程及 Runtime 课程分开保存。
 
 # 第一步：用普通函数查订单
 
@@ -294,18 +294,19 @@ npm start
 
 ### 交互式代码导读
 
-打开 [原生 JavaScript 学习页](http://127.0.0.1:3210/learn/native)、[LangChain 学习页](http://127.0.0.1:3210/learn) 或 [LangGraph 学习页](http://127.0.0.1:3210/learn/langgraph)。工作台顶部的导读入口跟随当前实现版本；学习页顶部也能互相切换。
+打开 [Copilot Runtime 学习页](http://127.0.0.1:3210/learn/runtime)，先读三种 Web 实现共用的页面接入、Agent 分发与事件回传；再按需进入[原生 JavaScript](http://127.0.0.1:3210/learn/native)、[LangChain](http://127.0.0.1:3210/learn) 或 [LangGraph](http://127.0.0.1:3210/learn/langgraph) 学习页。工作台顶部的导读入口跟随当前实现版本；每条实现教程和学习页顶部都可跳转到 Runtime 教程。
 
-- LangChain 保留八节内容，依次讲解项目分工、Copilot Runtime 基础、LangChain 核心概念、工具定义、模型配置、Agent 循环、结果渲染、可靠性与 Token。
-- LangGraph 新增六节：两版分工、State / Reducer、模型与工具节点、普通边与条件边、逐步走图、两版对照与扩展。两版学习进度独立保存，旧版进度继续保留。
+- Copilot Runtime 独立四节：共用 Web 链路、Provider 与 HTTP 注册、OrderAgent 执行及 AG-UI 事件、页面渲染与会话边界。命令行入口直接调用 Agent，不经过 Runtime。
+- LangChain 保留七节内容，依次讲解项目分工、LangChain 核心概念、工具定义、模型配置、Agent 循环、结果渲染、可靠性与 Token。
+- LangGraph 新增六节：两版分工、State / Reducer、模型与工具节点、普通边与条件边、逐步走图、两版对照与扩展。各课程学习进度独立保存，旧版进度继续保留。
 - LangGraph 教学图可逐步查看状态消息、分支和两类调用计数；它是固定脚本，工作台的真实执行记录则由后端图节点产生。
 - 请求实验室提供查到订单、订单不存在、缺少订单号三种固定脚本，可逐步查看消息与调用计数；不请求模型、不消耗 API Token。
-- 第一节默认展示页面的 `runAgent` 入口；第二节解释 Provider、前端代理、Runtime、后端 Agent、LangChain、AG-UI 与工具渲染的关系，并列出路由、ID 和事件映射。
-- 第三节提供 Model、Message、Tool、Prompt、Agent、Middleware、State、Runnable 和结构化输出九张概念卡，区分三个运行入口，并解释记忆、LangGraph / LangSmith、RAG 的适用位置；附官方文档和真实源码，标注当前已使用与尚未接入的能力。
+- LangChain 第一节保留 Web 到 Agent 的简要入口，完整的 Provider、前端代理、Runtime、后端 Agent、AG-UI、路由与 ID 映射集中在独立 Runtime 教程。
+- LangChain 核心概念章节提供 Model、Message、Tool、Prompt、Agent、Middleware、State、Runnable 和结构化输出九张概念卡，区分运行入口，并解释记忆、LangGraph / LangSmith、RAG 的适用位置；附官方文档和真实源码，标注当前已使用与尚未接入的能力。
 - 代码片段来自构建时明确列出的仓库源码，显示实际行号；不导入 `.env`。修改被引用的源码后需重新 `npm run build`。
 - 每节小测答对后保存本浏览器的学习进度，可随时跳转章节。学习进度与订单对话独立。
 
-页面入口是 `src/web/learn.html`、`src/web/entries/learn.jsx`，页面组装在 `src/web/pages/learning/`，课程在 `src/web/content/*learning-content.js`，源码白名单与节选定位在 `src/web/content/source-files.js`，样式在 `src/web/styles/learn.css`。Vite 使用两个 HTML 入口；三版课程共用页面壳，独立的交互导读位于 `src/web/components/learning/`。这份学习页不加载 Copilot Runtime，也不替代真实模型验证。
+页面入口是 `src/web/learn.html`、`src/web/entries/learn.jsx`，页面组装在 `src/web/pages/learning/`，课程在 `src/web/content/*learning-content.js`，源码白名单与节选定位在 `src/web/content/source-files.js`，样式在 `src/web/styles/learn.css`。Vite 使用两个 HTML 入口；四条课程共用页面壳，独立的交互导读位于 `src/web/components/learning/`。学习页只阅读构建时源码，不加载 Copilot Runtime，也不替代真实模型验证。四条路线分别保存进度，已有三条路线的存储 key 保持不变。
 
 ## 三个实现版本并存
 

@@ -1,6 +1,6 @@
 /**
  * 教程浏览器入口：按路径选择课程，按 source 参数选择教程页或完整源码页。
- * 三版共用挂载流程，课程内容与持久化进度使用各自的定义。
+ * 三种实现与 Runtime 课程共用挂载流程，课程内容与持久化进度使用各自的定义。
  */
 import React from 'react';
 import { createRoot } from 'react-dom/client';

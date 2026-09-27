@@ -25,29 +25,6 @@ export const lessons = [
     quiz: { question: '模型真正需要查询订单时，谁负责执行 getOrder？', options: ['大模型直接进入数据库执行', 'Node 程序通过 LangChain 执行已注册的工具', 'CopilotKit 根据 Markdown 生成并执行查询'], answer: 1, explanation: '模型只提出工具调用请求。实际执行发生在 Node 后端，LangChain 找到注册的工具函数并调用它。' },
   },
   {
-    id: 'runtime', name: '认识 Copilot Runtime', subtitle: '前端怎样连到 Agent', minutes: '6 min',
-    title: 'Runtime，把页面接到后端 Agent。',
-    intro: '先分清“界面连接”和“智能编排”。Copilot Runtime 在你的 Node 服务中接收运行请求、找到 Agent，并把执行事件送回页面；当前项目的模型与工具循环交给 LangChain。',
-    takeaway: 'Provider 配地址 → Runtime 按 agentId 找 Agent → Agent 执行 → AG-UI 事件回到页面。',
-    points: [
-      ['第一步：前后端约定同一个名字', '前端 runtimeUrl 是 /api/copilotkit，agentId 是 orders；后端 agents 对象里必须有 orders 这个键。它是路由名称，可以由开发者命名，与模型名称、OrderAgent 类名、getOrder 工具名分别承担不同职责。'],
-      ['第二步：把 Runtime 挂到 HTTP 服务', 'new CopilotRuntime({ agents }) 注册可用 Agent，createCopilotRuntimeHandler 将它转成接收 Request、返回 Response 的处理函数。src/server/http-server.mjs 把 /api/copilotkit 下的请求交给这个 handler，并把响应流写回浏览器。我们用原生 Node HTTP，没有另开一个 Copilot 云服务。'],
-      ['第三步：发起运行，接住事件', '页面先 agent.addMessage，再 copilotkit.runAgent({ agent })。前端 SDK 读取 /info 发现 Agent，通过运行接口提交消息。Runtime 克隆匹配的后端 Agent，由默认的内存 Runner 管理运行和事件流；自定义 OrderAgent.run(input) 再调用 runOrderQuestion。'],
-      ['第四步：让界面跟着事件更新', 'OrderAgent 产出 RUN_STARTED、工具事件、文本事件和结束事件。Runtime 以 SSE 回传，前端 Agent 对象更新 messages、isRunning 等状态。CopilotChatView 读取这些状态，useRenderTool 按工具名选择卡片；本项目的 CUSTOM/harness 事件另外供 Token 面板使用。'],
-      ['messages、state 与持久化', 'messages 是对话消息；state 可以承载前后端共享的结构化状态，但这个订单示例没有使用共享业务 state。threadId 标识会话，并不自动带来数据库持久化。当前项目没有接入长期会话数据库或跨重启记忆，追问上下文来自这次请求携带的历史消息。'],
-      ['能力边界与版本', '本页对应仓库中的 CopilotKit 1.74.0 /v2 API。Runtime 可作为认证和中间件的接入位置，但本项目目前只配置本机访问与同源限制，没有业务用户登录或订单权限系统。LangChain 的 createMiddleware 与 AG-UI 的中间件也是不同层的机制。'],
-    ],
-    snippets: [
-      { label: '1. 配置 Provider', note: 'Provider 给子组件提供客户端上下文。runtimeUrl 是后端入口，agentId 选择后端 agents 表里的键；它们不是模型 API 地址或工具名称。', ...excerpt('src/web/pages/chat/ChatPage.jsx', 'return <CopilotKitProvider', '<CopilotChatConfigurationProvider agentId=') },
-      { label: '2. 注册 Runtime', note: '本项目注册 orders（LangChain）、orders_graph（LangGraph）、orders_native（原生）以及 demo / demo_native。没有显式传 runner，当前安装版本默认使用 InMemoryAgentRunner。它管理运行过程，不负责 LangChain 的模型决策循环。', ...excerpt('src/server/copilot-handler.mjs', 'export async function createCopilotHandler', 'return createCopilotRuntimeHandler') },
-      { label: '3. 接到 HTTP', note: 'Node 的 req 被转换成 Web 标准 Request，交给 Runtime handler。后面的 reader 循环将 SSE 响应写回浏览器；这一层不解析订单或执行 getOrder。', ...excerpt('src/server/http-server.mjs', 'const response = await handler(new Request', 'const reader = response.body?.getReader();') },
-      { label: '4. 执行后端 Agent', note: '这是我们实现的 OrderAgent.run 中的业务分支。它将消息整理成 question/history，真实模型模式才进入 src/agent/langchain/agent.mjs；本地演示使用 runDemo。', ...excerpt('src/server/order-agent.mjs', "send({ type: 'RUN_STARTED'", "send({ type: 'RUN_FINISHED'") },
-      { label: '5. 转为 AG-UI 事件', note: '业务层的 tool_call、tool_result、answer 被翻译为标准工具和文本事件。name 选工具卡片；加了 runId 前缀的 toolCallId 将结果关联到这一轮的这一张卡片。', ...excerpt('src/server/order-agent.mjs', 'const callId =', "send({ type: 'TEXT_MESSAGE_END'") },
-      { label: '6. 前端绑定卡片', note: '这里声明 getOrder 的工具结果用 OrderCard 展示。工具是否存在、怎么查询、有没有权限，都需要后端另外实现。', ...excerpt('src/web/pages/chat/ChatWorkspace.jsx', 'useRenderTool({ name:', 'useRenderTool({ name:') },
-    ],
-    quiz: { question: '前端的 orders 和 getOrder 分别匹配哪里？', options: ['orders 匹配后端 agents 的键；getOrder 匹配工具名称与卡片渲染器', 'orders 是模型名称；getOrder 是 Runtime 地址', '两者都是 tool_call_id，名字可以随意混用'], answer: 0, explanation: '这是两层映射：agentId 找后端 Agent，工具 name 找业务工具与前端渲染器。一次具体调用再靠 tool_call_id / toolCallId 关联结果。' },
-  },
-  {
     id: 'langchain', name: 'LangChain 核心概念', subtitle: '先掌握开发词汇', minutes: '8 min',
     title: '把几个核心概念，连成一条工作链。',
     intro: 'LangChain 提供模型适配、消息、工具和 Agent 编排等组件。用当前订单助手对照这些名字，就能看懂 createAgent 的配置和 invoke 的输入输出。',
@@ -219,16 +196,6 @@ export const langchainConcepts = [
     source: '当前项目没有 responseFormat；最终回答是 Markdown，订单卡片直接读取工具 JSON。',
     doc: 'https://docs.langchain.com/oss/javascript/langchain/structured-output',
   },
-];
-
-export const runtimeConcepts = [
-  { name: 'Copilot Runtime', place: 'Node 后端', title: 'Agent 的服务接入层', description: '维护可用 Agent 的名称映射，提供发现、运行、停止等 HTTP 接口，并把 Agent 事件返回给前端。当前它与 src/server/http-server.mjs 运行在同一个 Node 进程里。它接到 orders 请求后交给 OrderAgent，模型决策在后续的 LangChain Agent 中完成。', code: 'new CopilotRuntime({\n  agents: {\n    orders: createOrderAgent(config),\n    demo: createOrderAgent(config, { demo: true })\n  }\n})', source: 'src/server/copilot-handler.mjs' },
-  { name: 'Provider', place: 'React 页面', title: '配置地址，并共享客户端上下文', description: 'CopilotKitProvider 包住页面，让子组件中的 Hooks 拿到同一套客户端配置。runtimeUrl 指向自己的后端；agentId 指定想运行的 Agent。CopilotChatConfigurationProvider 另外配置聊天文案等选项。', code: '<CopilotKitProvider\n  runtimeUrl="/api/copilotkit"\n  agentId="orders"\n>\n  <Workspace />\n</CopilotKitProvider>', source: 'src/web/pages/chat/ChatPage.jsx · 精简示例' },
-  { name: '前端 Agent', place: '浏览器内存', title: '后端 Agent 在前端的代理对象', description: 'useAgent 返回前端代理及就绪状态。agent.messages 是消息，agent.isRunning 是运行状态。useCopilotKit 返回客户端；这里调用它的 runAgent，把当前消息发给 Runtime。这个对象不在浏览器执行 LangChain。', code: 'const { agent, isReady } = useAgent({ agentId: "orders" });\nconst { copilotkit } = useCopilotKit();\n\n// 用户提交问题后：\nagent.addMessage({\n  id: crypto.randomUUID(), role: "user",\n  content: "A1001 谁在审批？"\n});\nawait copilotkit.runAgent({ agent });', source: 'src/web/state/chat/useChatRun.js · 精简示例，完整入口含并发与错误处理' },
-  { name: '后端 OrderAgent', place: 'Node 后端', title: '我们写的 AG-UI 适配器', description: '它继承 AbstractAgent，run(input) 接收消息和会话上下文，返回 Observable 事件流。它整理历史、调用业务 Agent、转换事件并处理取消。clone() 让 Runtime 为运行复制实例。Observable 可以理解为持续送来多条事件的通道。', code: 'class OrderAgent extends AbstractAgent {\n  run(input) {\n    return new Observable((subscriber) => {\n      // 接收 input.messages / threadId / runId\n      // 调用 runOrderQuestion\n      // subscriber.next(...) 逐条发出 AG-UI 事件\n    });\n  }\n}', source: 'src/server/order-agent.mjs · 结构示意' },
-  { name: 'LangChain Agent', place: 'Node 后端', title: '模型与工具的编排器', description: 'createAgent 把模型、工具、系统提示词和中间件组合起来。invoke 驱动“问模型、执行工具、带回结果、继续回答”的循环。它的结果需要经过 OrderAgent 转换，才能进入我们这套 CopilotKit 界面。', code: 'const agent = createAgent({\n  model: chatModel, tools: [orderTool],\n  systemPrompt, middleware: [middleware]\n});\nawait agent.invoke({\n  messages: [...history, { role: "user", content: question }]\n});', source: 'src/agent/langchain/agent.mjs · 精简示例' },
-  { name: 'AG-UI / SSE', place: '前后端之间', title: '事件的格式与传输方式', description: 'AG-UI 约定消息类型与字段：运行开始、工具参数、工具结果、文本片段、结束或失败。SSE 是本项目传送这些事件的 HTTP 流格式。AG-UI 的 TOOL_CALL_RESULT 来自后端转换，不能与模型 API 返回的 tool_calls 原始结构混为一谈。', code: '// 一条发给页面的工具结果事件（节选）\n{\n  type: "TOOL_CALL_RESULT",\n  toolCallId: "run_1:call_1",\n  role: "tool",\n  content: "{\\"found\\":true,\\"order\\":{...}}"\n}', source: 'src/server/order-agent.mjs · 协议示意，订单字段省略' },
-  { name: 'useRenderTool', place: 'React 页面', title: '声明一种工具结果如何展示', description: 'name: getOrder 将工具结果绑定到 OrderCard。组件收到 status、parameters、result，按业务字段显示加载状态、错误或订单。这个 Hook 注册的是 UI 展示，不会替你在后端查询数据库。', code: 'const agentId = "orders";\nuseRenderTool({\n  name: "getOrder", agentId,\n  parameters: z.object({ orderId: z.string() }),\n  render: OrderCard\n}, [agentId]);', source: 'src/web/pages/chat/ChatWorkspace.jsx · 精简示例' },
 ];
 
 export const fileMap = [

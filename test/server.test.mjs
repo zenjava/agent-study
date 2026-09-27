@@ -113,6 +113,13 @@ test('只提供白名单静态文件和非秘密配置，不提供 .env 或源�
     assert.equal(page.status, 200);
     assert.equal(await page.text(), builtPage);
   }
+  const runtimePage = await fetch(`${url}/learn/runtime`);
+  const builtLesson = await readFile(new URL('../dist/learn.html', import.meta.url), 'utf8').catch(/** 构建产物不存在时返回空值，其他文件读取错误继续抛出。 */ (error) => {
+    if (error.code === 'ENOENT') return null;
+    throw error;
+  });
+  assert.equal(runtimePage.status, builtLesson === null ? 503 : 200);
+  if (builtLesson !== null) assert.equal(await runtimePage.text(), builtLesson);
 });
 
 test('无效输入和跨站请求不会触发模型', /** 验证：无效输入和跨站请求不会触发模型。 */ async (t) => {

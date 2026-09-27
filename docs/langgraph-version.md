@@ -11,11 +11,12 @@ LangChain 实现在 `src/agent/langchain/agent.mjs`，LangGraph 实现在 `src/a
 - 模型节点每次加入系统消息并调用模型；工具节点执行校验和查询，返回 ToolMessage。新的消息 ID 由程序生成，避免重复响应 ID 导致 reducer 覆盖历史。
 - `graph_node` 与 `graph_edge` 是额外的教学事件；Token 始终由实际 HTTP 响应 usage 统计。
 
-## 两条教程
+## 学习教程
 
-- `/learn`（兼容 `/learn/langchain`）：原 LangChain 八节。
+- `/learn/runtime`：三种 Web 实现共用的 Runtime 接入、协议适配与事件渲染四节；CLI 不走 Runtime。
+- `/learn`（兼容 `/learn/langchain`）：LangChain 七节。
 - `/learn/langgraph`：六节，包括 State / Reducer、Node、Edge、compile / invoke、交互图及两版对照。
-- 进度分别保存在 `harness-learning-v1` 和 `harness-learning-langgraph-v1`；重置只影响当前路线。
+- 进度分别保存在 `harness-learning-runtime-v1`、`harness-learning-v1` 和 `harness-learning-langgraph-v1`；重置只影响当前路线。
 - 教学图是零用量固定脚本，源码节选来自构建时的白名单文件；不读取 `.env`。
 
 ## 验证与边界
