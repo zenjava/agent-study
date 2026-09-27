@@ -6,8 +6,8 @@ import { randomUUID } from 'node:crypto';
 import { StateGraph, StateSchema, MessagesValue, START, END } from '@langchain/langgraph';
 import { ChatOpenAI } from '@langchain/openai';
 import { SystemMessage, ToolMessage } from '@langchain/core/messages';
-import { orderSchema, orderTool, systemPrompt } from './order-contract.mjs';
-import { createModelTransport, validateBaseURL } from './model-transport.mjs';
+import { orderSchema, orderTool, systemPrompt } from '../common/order-contract.mjs';
+import { createModelTransport, validateBaseURL } from '../common/model-transport.mjs';
 
 // MessagesValue 用内置 reducer 合并消息：节点只需返回新增消息，不手动重写整个历史。
 const OrderState = new StateSchema({ messages: MessagesValue });
@@ -21,7 +21,7 @@ export async function runOrderQuestionGraph({
   if (![baseURL, model, apiKey].every((value) => typeof value === 'string' && value.trim())) {
     throw new Error('请配置 LLM_BASE_URL、LLM_MODEL、LLM_API_KEY。' +
       '在项目目录执行 cp -n .env.example .env，再在本机编辑 .env；' +
-      '使用 node --env-file=.env src/agent/cli/langgraph.mjs 启动。');
+      '使用 node --env-file=.env src/agent/langgraph/cli.mjs 启动。');
   }
   if (['replace-with-your-deepseek-api-key', 'replace-with-your-openai-api-key'].includes(apiKey.trim())) {
     throw new Error('请在本机 .env 中将 LLM_API_KEY 的占位符替换为你的 DeepSeek API key，再重启服务。');

@@ -4,7 +4,7 @@
 
 对话区域只保留一层纵向滚动，输入框固定在底部；使用 CopilotKit 的 pin-to-send 模式从本轮问题开始展示结果，避免卡片出现后自动跳到末尾。助手的工具结果和 Markdown 文字分别标注为「订单查询」和「助手解读」。窄屏商品行合并规格、数量与单价，保留全部字段；流程和配送仍通过卡片页签查看。
 
-采用自托管 Copilot Runtime 和 AG-UI 适配层，位于 src/server/；src/agent/langchain.mjs 承担实际模型请求、工具白名单、执行与 usage 统计，src/agent/cli/langchain.mjs 保留为 CLI 入口。工具卡片依据工具结果渲染，模型文字使用 CopilotKit 的 Markdown 展示。保留 CLI，网页统一通过 /api/copilotkit 运行 Agent。
+采用自托管 Copilot Runtime 和 AG-UI 适配层，位于 src/server/；src/agent/langchain/agent.mjs 承担实际模型请求、工具白名单、执行与 usage 统计，src/agent/langchain/cli.mjs 保留为 CLI 入口。工具卡片依据工具结果渲染，模型文字使用 CopilotKit 的 Markdown 展示。保留 CLI，网页统一通过 /api/copilotkit 运行 Agent。
 
 示例包含待审批、配送中、已完成三张订单，补充供应商、申请人、部门、金额、商品、审批、配送、发票和时间线。全部为虚构教学数据。页面默认本地演示（固定规则、无模型调用），切换真实模型后才在发送时使用后端密钥。未知订单、缺少订单号、错误、取消和用量缺失均有可见状态。
 

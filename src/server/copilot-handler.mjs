@@ -3,9 +3,9 @@
  * 所有实现复用 OrderAgent 的 AG-UI 协议适配，通过 runner 注入不同编排函数。
  */
 import { createOrderAgent } from './order-agent.mjs';
-import { runOrderQuestionGraph } from '../agent/langgraph.mjs';
-import { runOrderQuestionNative } from '../agent/native.mjs';
-import { runNativeDemo } from '../agent/native-demo.mjs';
+import { runOrderQuestionGraph } from '../agent/langgraph/agent.mjs';
+import { runOrderQuestionNative } from '../agent/native/agent.mjs';
+import { runNativeDemo } from '../agent/native/demo/model.demo.mjs';
 
 // 创建并返回标准 Web Request → Response 处理器，供原生 Node HTTP 服务桥接。
 export async function createCopilotHandler(config) {

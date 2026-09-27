@@ -9,7 +9,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
 import { test } from 'node:test';
-import { getOrder } from '../src/agent/tools/get-order.mjs';
+import { getOrder } from '../src/agent/common/tools/get-order.mjs';
 
 const fakeKey = 'offline-test-key-not-a-secret';
 const options = {

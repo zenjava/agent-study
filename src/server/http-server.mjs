@@ -4,7 +4,7 @@
  */
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
-import { listOrderSummaries } from '../agent/tools/get-order.mjs';
+import { listOrderSummaries } from '../agent/common/tools/get-order.mjs';
 import { createCopilotHandler } from './copilot-handler.mjs';
 
 // 只构建服务对象，不在此处监听端口，便于启动入口与测试分别决定监听地址。

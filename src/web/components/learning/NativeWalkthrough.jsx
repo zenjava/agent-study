@@ -4,7 +4,7 @@
  */
 import React from 'react';
 import { Code } from './Code.jsx';
-import { scenarios, names } from '../../content/native-scenarios.js';
+import { scenarios, names } from '../../content/demo/native-scenarios.demo.js';
 import { useNativeDemo } from '../../state/learning/useNativeDemo.js';
 
 export function NativeWalkthrough() {
@@ -15,7 +15,7 @@ export function NativeWalkthrough() {
     {error && <p role="alert">{error}</p>}
     {event ? <>
       <div className="graph-step-buttons" aria-label="原生运行事件">{events.map((item, i) => <button key={i} aria-current={index === i ? 'step' : undefined} onClick={() => setIndex(i)}><small>{String(i + 1).padStart(2, '0')}</small>{names[item.type]}</button>)}</div>
-      <div className="graph-step-detail" aria-live="polite"><div><span className="actor">第 {event.step} 次循环</span><h4>{names[event.type]}</h4><p>这是 native.mjs 本次运行产生的事件快照。请求中的 messages 展示当时模型可以看见的上下文。</p><div className="graph-counts"><span><b>{seen.filter((e) => e.type === 'request').length}</b>次模拟模型请求</span><span><b>{seen.filter((e) => e.type === 'tool_result').length}</b>次实际工具执行</span></div><div className="lab-controls"><button className="quiet-button" disabled={index === 0} onClick={() => setIndex(index - 1)}>← 上一步</button><button className="primary-button" onClick={() => setIndex(index === events.length - 1 ? 0 : index + 1)}>{index === events.length - 1 ? '从头回放 ↺' : '下一步 →'}</button></div></div><div><div className="code-caption"><span>{event.type} · 本次运行快照</span></div><Code value={JSON.stringify(event.data, null, 2)} /></div></div>
+      <div className="graph-step-detail" aria-live="polite"><div><span className="actor">第 {event.step} 次循环</span><h4>{names[event.type]}</h4><p>这是 native/agent.mjs 本次运行产生的事件快照。请求中的 messages 展示当时模型可以看见的上下文。</p><div className="graph-counts"><span><b>{seen.filter((e) => e.type === 'request').length}</b>次模拟模型请求</span><span><b>{seen.filter((e) => e.type === 'tool_result').length}</b>次实际工具执行</span></div><div className="lab-controls"><button className="quiet-button" disabled={index === 0} onClick={() => setIndex(index - 1)}>← 上一步</button><button className="primary-button" onClick={() => setIndex(index === events.length - 1 ? 0 : index + 1)}>{index === events.length - 1 ? '从头回放 ↺' : '下一步 →'}</button></div></div><div><div className="code-caption"><span>{event.type} · 本次运行快照</span></div><Code value={JSON.stringify(event.data, null, 2)} /></div></div>
     </> : !error && <p role="status">正在运行原生循环…</p>}
     <p className="lab-note">只有模型响应由脚本模拟；参数校验、消息追加、订单查询和循环执行都使用实际 Agent 代码。本页不访问外部网络。</p>
   </section>;

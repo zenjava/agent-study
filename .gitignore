@@ -5,3 +5,5 @@
 # 依赖由锁文件恢复，构建产物由 Vite 重新生成。
 node_modules/
 dist/
+# Finder 自动生成的目录元数据不属于项目源码。
+.DS_Store

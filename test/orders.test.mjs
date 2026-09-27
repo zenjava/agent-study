@@ -4,7 +4,7 @@
  */
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { getOrder, listOrderSummaries } from '../src/agent/tools/get-order.mjs';
+import { getOrder, listOrderSummaries } from '../src/agent/common/tools/get-order.mjs';
 
 test('订单明细、金额、收货和流程信息可用于卡片展示，金额与行项目一致', () => {
   const summaries = listOrderSummaries();

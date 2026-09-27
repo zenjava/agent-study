@@ -1,13 +1,13 @@
 # 并存的 LangGraph 学习版本
 
-LangChain 实现在 `src/agent/langchain.mjs`，LangGraph 实现在 `src/agent/langgraph.mjs`；`src/agent/cli/langchain.mjs` 和 `src/agent/cli/langgraph.mjs` 分别保留为 CLI 入口。比较对象是 `createAgent` 高层 API 与显式 `StateGraph`；LangChain Agent 本身也基于 LangGraph。
+LangChain 实现在 `src/agent/langchain/agent.mjs`，LangGraph 实现在 `src/agent/langgraph/agent.mjs`；`src/agent/langchain/cli.mjs` 和 `src/agent/langgraph/cli.mjs` 分别保留为 CLI 入口。比较对象是 `createAgent` 高层 API 与显式 `StateGraph`；LangChain Agent 本身也基于 LangGraph。
 
 ## 运行链路
 
 - 页面分别选择实现版本与 demo/live 模式。切换开始新对话，避免历史和用量混合；运行中禁止切换。
 - `orders` 继续调用 LangChain；`orders_graph` 注入 LangGraph runner；`demo` 保持共用固定规则并明确提示。
 - LangGraph 使用 `StateSchema({ messages: MessagesValue })`，model / tools 两个节点和 model 后的条件边。
-- 两版共用 `src/agent/order-contract.mjs`、`get-order.mjs`、`model-transport.mjs`、AG-UI 桥接与 UI。模型连接和编排代码各自保留，便于顺着单一文件学习。
+- 两版共用 `src/agent/common/order-contract.mjs`、`common/tools/get-order.mjs`、`common/model-transport.mjs`、AG-UI 桥接与 UI。模型连接和编排代码各自保留，便于顺着单一文件学习。
 - 模型节点每次加入系统消息并调用模型；工具节点执行校验和查询，返回 ToolMessage。新的消息 ID 由程序生成，避免重复响应 ID 导致 reducer 覆盖历史。
 - `graph_node` 与 `graph_edge` 是额外的教学事件；Token 始终由实际 HTTP 响应 usage 统计。
 

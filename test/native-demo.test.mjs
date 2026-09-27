@@ -9,18 +9,18 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { runNativeDemo } from '../src/agent/native-demo.mjs';
+import { runNativeDemo } from '../src/agent/native/demo/model.demo.mjs';
 
 test('原生 CLI 在没有 node_modules 的独立目录运行 Demo', async (t) => {
   // 复制到独立临时目录运行，防止测试误从仓库 node_modules 找到依赖而掩盖无框架要求。
   const directory = await realpath(await mkdtemp(join(tmpdir(), 'harness-native-standalone-')));
   t.after(() => rm(directory, { recursive: true, force: true }));
-  for (const file of ['native.mjs', 'native-demo.mjs', 'order-definition.mjs', 'model-transport.mjs', 'tools/get-order.mjs', 'cli/native.mjs']) {
+  for (const file of ['native/agent.mjs', 'native/demo/model.demo.mjs', 'common/order-definition.mjs', 'common/model-transport.mjs', 'common/tools/get-order.mjs', 'common/demo/orders.demo.json', 'common/demo/inputs.demo.json', 'native/cli.mjs']) {
     const target = join(directory, file);
     await mkdir(join(target, '..'), { recursive: true });
     await copyFile(new URL(`../src/agent/${file}`, import.meta.url), target);
   }
-  const { stdout, stderr } = await promisify(execFile)(process.execPath, [join(directory, 'cli/native.mjs'), '--demo', '查 A1001'], { cwd: directory, timeout: 5000 });
+  const { stdout, stderr } = await promisify(execFile)(process.execPath, [join(directory, 'native/cli.mjs'), '--demo', '查 A1001'], { cwd: directory, timeout: 5000 });
   assert.equal(stderr, '');
   assert.match(stdout, /第 2 次请求/);
   assert.match(stdout, /采购负责人/);

@@ -1,0 +1,9 @@
+{
+  "toolPayload": "{ found: true, order: { … } }",
+  "orderId": "A1001",
+  "status": "审批中",
+  "amount": "¥48,600.00",
+  "approverRole": "采购负责人",
+  "approverName": "陈予安（示例）",
+  "answer": "\"当前由 **采购负责人** 审批。\""
+}

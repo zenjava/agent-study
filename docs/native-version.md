@@ -1,6 +1,6 @@
 # 原生 JavaScript Agent
 
-`src/agent/native.mjs` 使用普通函数、原生 `fetch`、消息数组和 `for` 循环，不依赖模型 SDK、LangChain、LangGraph 或 Zod。共用的 `order-definition.mjs`、`model-transport.mjs`、`tools/get-order.mjs` 也没有第三方依赖。
+`src/agent/native/agent.mjs` 使用普通函数、原生 `fetch`、消息数组和 `for` 循环，不依赖模型 SDK、LangChain、LangGraph 或 Zod。共用的 `common/order-definition.mjs`、`common/model-transport.mjs`、`common/tools/get-order.mjs` 也没有第三方依赖。
 
 ## 先运行 Demo
 
@@ -28,12 +28,14 @@ npm run agent:native -- "A1001 谁在审批？"
 ## 阅读顺序
 
 1. `order-definition.mjs`：普通 JSON Schema、工具描述与 systemPrompt。Schema 是发给模型的说明；原生执行前另做参数检查。
-2. `native.mjs` 的 `messages`：system → 历史 → 本轮 user。每次运行独立创建，不提供长期记忆。
+2. `native/agent.mjs` 的 `messages`：system → 历史 → 本轮 user。每次运行独立创建，不提供长期记忆。
 3. `for` 循环：构造 model/messages/tools，经 `transport.fetch` 发请求，读取 assistant 消息。
 4. `executeTool`：只允许 getOrder，拒绝非法 JSON、空订单号和额外参数；错误也回传给模型。
 5. `messages.push`：先保存 assistant 调用，再保存带相同 tool_call_id 的 tool 结果；下一轮请求才把结果发给模型。
 6. `model-transport.mjs`：原生 fetch、超时、取消、原始响应与 usage、响应 ID 校验、脱敏错误。
-7. `native-demo.mjs`：只模拟模型，不替代 Agent 循环。它支持明确订单号、最近历史的订单号、多个订单和缺少订单号追问，不具备真实语言理解能力。
+7. `native/demo/model.demo.mjs`：只模拟模型，不替代 Agent 循环。它支持明确订单号、最近历史的订单号、多个订单和缺少订单号追问，不具备真实语言理解能力。
+
+订单样本和 CLI 默认输入分别在 `common/demo/orders.demo.json`、`common/demo/inputs.demo.json`，查询函数从独立的数据文件读取样本。`demo/` 目录与 `.demo` 文件标记均使用小写。
 
 ## 教程与验证
 

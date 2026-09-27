@@ -2,17 +2,18 @@
  * 教学源码注册表：显式导入允许阅读的文件文本，供源码页和课程节选共用。
  * 文件以 ?raw 作为字符串打包，不执行这些导入内容，也不收录本机密钥。
  */
-import nativeSource from '../../agent/native.mjs?raw';
-import nativeDemoSource from '../../agent/native-demo.mjs?raw';
-import definitionSource from '../../agent/order-definition.mjs?raw';
-import nativeEntrySource from '../../agent/cli/native.mjs?raw';
+import nativeSource from '../../agent/native/agent.mjs?raw';
+import nativeDemoSource from '../../agent/native/demo/model.demo.mjs?raw';
+import definitionSource from '../../agent/common/order-definition.mjs?raw';
+import nativeEntrySource from '../../agent/native/cli.mjs?raw';
 // 只导入明确列出的教学源码；不读取 .env 或提供任意文件访问接口。
-import agentSource from '../../agent/langchain.mjs?raw';
-import graphSource from '../../agent/langgraph.mjs?raw';
-import contractSource from '../../agent/order-contract.mjs?raw';
-import orderSource from '../../agent/tools/get-order.mjs?raw';
+import agentSource from '../../agent/langchain/agent.mjs?raw';
+import graphSource from '../../agent/langgraph/agent.mjs?raw';
+import contractSource from '../../agent/common/order-contract.mjs?raw';
+import orderDataSource from '../../agent/common/demo/orders.demo.json?raw';
+import orderSource from '../../agent/common/tools/get-order.mjs?raw';
 import bridgeSource from '../../server/order-agent.mjs?raw';
-import transportSource from '../../agent/model-transport.mjs?raw';
+import transportSource from '../../agent/common/model-transport.mjs?raw';
 import runtimeSource from '../../server/copilot-handler.mjs?raw';
 import pageSource from '../pages/chat/ChatPage.jsx?raw';
 import workspaceSource from '../pages/chat/ChatWorkspace.jsx?raw';
@@ -24,20 +25,21 @@ import cardSource from '../components/chat/OrderCard.jsx?raw';
 import serverSource from '../../server/http-server.mjs?raw';
 import traceSource from '../components/chat/TracePanel.jsx?raw';
 import serverEntrySource from '../../server/main.mjs?raw';
-import langchainEntrySource from '../../agent/cli/langchain.mjs?raw';
-import langgraphEntrySource from '../../agent/cli/langgraph.mjs?raw';
+import langchainEntrySource from '../../agent/langchain/cli.mjs?raw';
+import langgraphEntrySource from '../../agent/langgraph/cli.mjs?raw';
 
 export const files = {
-  'src/agent/native.mjs': nativeSource,
-  'src/agent/native-demo.mjs': nativeDemoSource,
-  'src/agent/order-definition.mjs': definitionSource,
-  'src/agent/cli/native.mjs': nativeEntrySource,
-  'src/agent/langchain.mjs': agentSource,
-  'src/agent/langgraph.mjs': graphSource,
-  'src/agent/order-contract.mjs': contractSource,
-  'src/agent/tools/get-order.mjs': orderSource,
+  'src/agent/native/agent.mjs': nativeSource,
+  'src/agent/native/demo/model.demo.mjs': nativeDemoSource,
+  'src/agent/common/order-definition.mjs': definitionSource,
+  'src/agent/native/cli.mjs': nativeEntrySource,
+  'src/agent/langchain/agent.mjs': agentSource,
+  'src/agent/langgraph/agent.mjs': graphSource,
+  'src/agent/common/order-contract.mjs': contractSource,
+  'src/agent/common/demo/orders.demo.json': orderDataSource,
+  'src/agent/common/tools/get-order.mjs': orderSource,
   'src/server/order-agent.mjs': bridgeSource,
-  'src/agent/model-transport.mjs': transportSource,
+  'src/agent/common/model-transport.mjs': transportSource,
   'src/server/copilot-handler.mjs': runtimeSource,
   'src/web/pages/chat/ChatPage.jsx': pageSource,
   'src/web/pages/chat/ChatWorkspace.jsx': workspaceSource,
@@ -49,8 +51,8 @@ export const files = {
   'src/server/http-server.mjs': serverSource,
   'src/web/components/chat/TracePanel.jsx': traceSource,
   'src/server/main.mjs': serverEntrySource,
-  'src/agent/cli/langchain.mjs': langchainEntrySource,
-  'src/agent/cli/langgraph.mjs': langgraphEntrySource,
+  'src/agent/langchain/cli.mjs': langchainEntrySource,
+  'src/agent/langgraph/cli.mjs': langgraphEntrySource,
 };
 
 // 行号从本次构建的实际源码推导，避免代码移动后仍指向旧位置。

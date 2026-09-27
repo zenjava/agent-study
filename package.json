@@ -7,11 +7,11 @@
     "build": "vite build",
     "start": "node --env-file=.env src/server/main.mjs",
     "demo": "node src/server/main.mjs",
-    "query": "node src/agent/cli/query.mjs",
-    "agent:native": "node --env-file=.env src/agent/cli/native.mjs",
-    "agent:langchain": "node --env-file=.env src/agent/cli/langchain.mjs",
-    "agent:langgraph": "node --env-file=.env src/agent/cli/langgraph.mjs",
-    "demo:native": "node src/agent/cli/native.mjs --demo",
+    "query": "node src/agent/native/query.mjs",
+    "agent:native": "node --env-file=.env src/agent/native/cli.mjs",
+    "agent:langchain": "node --env-file=.env src/agent/langchain/cli.mjs",
+    "agent:langgraph": "node --env-file=.env src/agent/langgraph/cli.mjs",
+    "demo:native": "node src/agent/native/cli.mjs --demo",
     "test": "node --test test/*.test.mjs"
   },
   "dependencies": {

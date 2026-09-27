@@ -2,7 +2,7 @@
  * LangChain 请求实验室的固定脚本：实际查询虚构订单，再组织精简的教学报文。
  * 模型响应与请求次数是预设演示，不代表真实模型一定采取同样步骤。
  */
-import { getOrder } from '../../agent/tools/get-order.mjs';
+import { getOrder } from '../../../agent/common/tools/get-order.mjs';
 
 const json = (value) => JSON.stringify(value, null, 2);
 

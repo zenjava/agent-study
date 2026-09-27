@@ -2,9 +2,9 @@
  * 原生 Agent 的离线模型替身：根据请求中的消息生成固定 HTTP 响应。
  * 只替换模型端，工具校验、查单和循环仍执行实际代码；不能用来判断真实模型的表现。
  */
-import { runOrderQuestionNative } from './native.mjs';
+import { runOrderQuestionNative } from '../agent.mjs';
 
-// 用脚本模拟模型 HTTP 响应，真正执行 native.mjs 的循环和 getOrder。
+// 用脚本模拟模型 HTTP 响应，真正执行 native/agent.mjs 的循环和 getOrder。
 // 无外部网络、无模型 Key；脚本判断不代表真实模型的理解能力。
 export function runNativeDemo(options) {
   return runOrderQuestionNative({

@@ -75,7 +75,7 @@ test('只提供白名单静态文件和非秘密配置，不提供 .env 或源�
   const { url } = await setup(t);
   const config = await (await fetch(`${url}/api/config`)).json();
   assert.deepEqual(config, { model: 'deepseek-flash', keyConfigured: true });
-  for (const path of ['/.env', '/.env.example', '/step2.mjs', '/.git/config', '/agent/langchain.mjs', '/server/http-server.mjs', '/src/agent/native.mjs', '/src/server/http-server.mjs']) {
+  for (const path of ['/.env', '/.env.example', '/step2.mjs', '/.git/config', '/agent/langchain.mjs', '/server/http-server.mjs', '/src/agent/native/agent.mjs', '/src/server/http-server.mjs']) {
     assert.equal((await fetch(`${url}${path}`)).status, 404);
   }
   const page = await fetch(url);

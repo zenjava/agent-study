@@ -6,8 +6,8 @@ import { randomUUID } from 'node:crypto';
 import { createAgent, createMiddleware } from 'langchain';
 import { ChatOpenAI } from '@langchain/openai';
 import { ToolMessage } from '@langchain/core/messages';
-import { orderSchema, orderTool, systemPrompt } from './order-contract.mjs';
-import { createModelTransport, validateBaseURL } from './model-transport.mjs';
+import { orderSchema, orderTool, systemPrompt } from '../common/order-contract.mjs';
+import { createModelTransport, validateBaseURL } from '../common/model-transport.mjs';
 
 // 从这里顺着读：配置模型 → 注册工具/中间件 → invoke；循环与消息回传交给 LangChain。
 export async function runOrderQuestion({
@@ -18,11 +18,11 @@ export async function runOrderQuestion({
   if (![baseURL, model, apiKey].every((value) => typeof value === 'string' && value.trim())) {
     throw new Error('请配置 LLM_BASE_URL、LLM_MODEL、LLM_API_KEY。' +
       '在项目目录执行 cp -n .env.example .env，再在本机编辑 .env；' +
-      '使用 node --env-file=.env src/agent/cli/langchain.mjs 启动。');
+      '使用 node --env-file=.env src/agent/langchain/cli.mjs 启动。');
   }
   if (['replace-with-your-deepseek-api-key', 'replace-with-your-openai-api-key'].includes(apiKey.trim())) {
     throw new Error('请在本机 .env 中将 LLM_API_KEY 的占位符替换为你的 DeepSeek API key，' +
-      '然后使用 node --env-file=.env src/agent/cli/langchain.mjs 启动。不要把密钥发到聊天中。');
+      '然后使用 node --env-file=.env src/agent/langchain/cli.mjs 启动。不要把密钥发到聊天中。');
   }
   if (typeof question !== 'string' || !question.trim()) throw new Error('请输入问题。');
   if (!Number.isSafeInteger(maxSteps) || maxSteps < 1 ||

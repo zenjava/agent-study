@@ -3,8 +3,8 @@
  * 切换场景或卸载时取消旧运行，避免旧结果覆盖当前演示。
  */
 import { useEffect, useState } from 'react';
-import { runNativeDemo } from '../../../agent/native-demo.mjs';
-import { scenarios, names } from '../../content/native-scenarios.js';
+import { runNativeDemo } from '../../../agent/native/demo/model.demo.mjs';
+import { scenarios, names } from '../../content/demo/native-scenarios.demo.js';
 
 export function useNativeDemo() {
   const [scenario, setScenario] = useState('found');

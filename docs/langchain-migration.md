@@ -4,8 +4,8 @@
 
 ## 目标与分工
 
-将 `src/agent/cli/langchain.mjs` 中手写的模型/工具循环替换为 LangChain.js `createAgent`。
-目录整理后，该实现位于 `src/agent/langchain.mjs`，`src/agent/cli/langchain.mjs` 只保留 CLI 启动逻辑；HTTP 和 AG-UI 接入位于 `src/server/`。
+将 `src/agent/langchain/cli.mjs` 中手写的模型/工具循环替换为 LangChain.js `createAgent`。
+目录整理后，该实现位于 `src/agent/langchain/agent.mjs`，`src/agent/langchain/cli.mjs` 只保留 CLI 启动逻辑；HTTP 和 AG-UI 接入位于 `src/server/`。
 `ChatOpenAI` 连接现有 OpenAI 兼容接口；`tool` 和 Zod 定义订单查询；中间件保留调用边界与教学事件。
 订单数据、系统提示词、CopilotKit 卡片和 AG-UI 协议保持现有业务语义。
 
@@ -29,7 +29,7 @@
 
 ```bash
 git show 1b2fb28:step2.mjs
-git diff 1b2fb28 -- src/agent/cli/langchain.mjs src agent server web README.md package.json
+git diff 1b2fb28 -- src/agent/langchain/cli.mjs src agent server web README.md package.json
 ```
 
 

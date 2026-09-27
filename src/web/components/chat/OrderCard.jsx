@@ -2,6 +2,7 @@
  * getOrder 工具结果的业务卡片：区分加载、异常、未找到与成功四类状态。
  * 成功结果中的金额、审批和配送信息直接来自查询数据；本地状态仅控制详情标签。
  */
+import examples from '../../../agent/common/demo/inputs.demo.json';
 import React, { useState } from 'react';
 
 // 统一按人民币格式显示工具返回的数值，卡片不再额外加税。
@@ -15,7 +16,7 @@ export function OrderCard({ status, parameters, result }) {
   try { payload = typeof result === 'string' ? JSON.parse(result) : result; } catch { /* 展示可见错误，避免整段对话崩溃。 */ }
   if (!payload) return <div className="result-notice">订单结果格式异常，请重新查询。</div>;
   if (payload.error) return <div className="result-notice">查询失败：{payload.error.message}</div>;
-  if (!payload.found) return <div className="result-notice"><strong>没有找到 {payload.orderId}</strong><p>请核对订单号。示例订单为 A1001、A1002、A1003。</p></div>;
+  if (!payload.found) return <div className="result-notice"><strong>没有找到 {payload.orderId}</strong><p>请核对订单号。示例订单为 {examples.orderIds.join('、')}。</p></div>;
   const o = payload.order;
   return <article className="order-card" aria-label={`订单 ${o.orderId} 详情`}>
     <div className="order-card-heading"><span className="order-ref"><span aria-hidden="true">▤</span> 采购订单 <b>{o.orderId}</b></span><span className={`status-pill ${o.statusCode}`}><span aria-hidden="true">●</span> {o.status}</span></div>

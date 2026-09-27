@@ -8,9 +8,9 @@
 
 ## 执行与验证
 
-- [x] 迁移 web、server、agent 至 src；HTML 进入 src/web，服务入口进入 src/server/main.mjs，CLI 进入 src/agent/cli。更新 Vite root/outDir、静态资源 URL、测试引用、源码导读与文档。
+- [x] 迁移 web、server、agent 至 src；HTML 进入 src/web，服务入口进入 src/server/main.mjs，CLI 随实现进入 src/agent/{native,langchain,langgraph}。更新 Vite root/outDir、静态资源 URL、测试引用、源码导读与文档。
 - [x] 为原生实现运行现有 orderAgentContract：完整工具循环、多工具、错误参数、HTTP 错误、超时、取消、原始 usage、上下文、CLI。先确认缺少实现的失败，再实现。
-- [x] 新增 src/agent/native.mjs；普通 JSON Schema 和系统提示词放入无第三方依赖的 order-definition.mjs，框架工具适配继续放 order-contract.mjs。
+- [x] 新增 src/agent/native/agent.mjs；普通 JSON Schema 和系统提示词放入无第三方依赖的 order-definition.mjs，框架工具适配继续放 order-contract.mjs。
 - [x] 新增原生 CLI 和无密钥 Demo。Demo 使用本机脚本模型执行真正的原生循环，明确标注模拟模型及零真实 API 用量。
 - [x] 注册 orders_native，工作台增加原生 JavaScript 选项和教程入口；保留共用本地卡片演示，提供专门运行原生循环的演示。
 - [x] 添加 /learn/native 教程，包括消息数组、HTTP 请求、工具调用、结果回传、执行边界及三版对照；源码来自实际文件，学习进度独立保存。

@@ -17,7 +17,8 @@ src/web/
 ├── state/
 │   ├── chat/                 # useChatSession、useChatRun
 │   └── learning/             # useLearningProgress、useNativeDemo
-├── content/                  # 课程、版本配置、演示场景、源码白名单
+├── content/                  # 课程、版本配置、源码白名单
+│   └── demo/                 # 演示场景、快捷提问、卡片预览与场景选项
 └── styles/                   # chat.css、learn.css、learning-tokens.css
 ```
 
@@ -50,5 +51,7 @@ src/web/
 `entries/learn.jsx` 根据路径调用 `getCourse`，选择三版课程；带 `source` 查询参数时挂载 `SourcePage`，否则挂载 `LearnPage`。学习导航、答题进度、重置与本地存储由 `useLearningProgress` 管理，每版仍使用各自原有的存储 key。
 
 课程定义集中在 `content/*learning-content.js`。`source-files.js` 显式收录可展示源码，`excerpt` 从当前文件文本推导节选行号。移动代码时需要同时修改源码收录路径、课程节选和文件地图，再重新构建；URL 参数只能选择白名单中的源码。
+
+页面演示数据集中在 `content/demo/`，采用 `*.demo.json` 或 `*.demo.js` 命名；组件只负责渲染和交互。三版共用的订单样本位于 `src/agent/common/demo/orders.demo.json`，页面场景按需通过查询函数读取，避免重复维护完整订单。课程正文与源码导航仍在 `content/`。
 
 新增页面从 `pages` 开始；新增业务请求从 `state` 开始；仅调整显示时从 `components` 开始。无需再到一个入口文件里同时修改状态、布局和教学内容。
